@@ -36,7 +36,7 @@ pentru <strong>situatia potrivita</strong>.
 </p>
 <p style="font-size: 1.1rem; line-height: 1.6;">
 Aceasta pagina ofera o <strong>comparatie detaliata</strong>, cu exemple practice, metrici de performanta 
-si <strong>ghiduri de decizie</strong> pentru implementarea optima in proiectele tale de NLP.
+si <strong>ghid de decizie</strong> pentru implementarea optima in proiectele tale de NLP.
 </p>
 </div>
 """, unsafe_allow_html=True)
@@ -116,7 +116,7 @@ with col1:
     
     <h5>Avantaje:</h5>
     <ul>
-    <li>Rigoritate matematica completa</li>
+    <li>Rigurozitate matematica completa</li>
     <li>Rezultate intotdeauna consistente</li>
     <li>Proprietati teoretic garantate</li>
     <li>Explicatii atat locale cat si globale</li>
@@ -264,7 +264,7 @@ st.markdown('<h2 class="section-header">Scenarii de utilizare - Cand sa alegi pe
 
 scenarios = [
     {
-        "scenario": "Prototipare rapida",
+        "scenario": "Prototipizare rapida",
         "description": "Explorezi o idee noua si vrei sa intelegi rapid comportamentul modelului",
         "recommendation": "LIME",
         "reason": "Feedback instant, implementare simpla, rezultate usor de interpretat",
@@ -274,7 +274,7 @@ scenarios = [
         "scenario": "Cercetare academica", 
         "description": "Publici un paper si ai nevoie de explicatii riguroase din punct de vedere matematic",
         "recommendation": "SHAP",
-        "reason": "Rigoritate teoretica, proprietati garantate, credibilitate academica",
+        "reason": "Rigurozitate teoretica, proprietati garantate, credibilitate academica",
         "color": "info-box"
     },
     {
@@ -285,7 +285,7 @@ scenarios = [
         "color": "error-box"
     },
     {
-        "scenario": "Explicatii pentru non-tehnici",
+        "scenario": "Explicatii pentru persoane non-tehnice",
         "description": "Prezinti rezultatele catre manageri, clienti sau utilizatori finali",
         "recommendation": "LIME", 
         "reason": "Vizualizari intuitive, explicatii simple, highlighting text clar",
@@ -406,14 +406,14 @@ with col1:
     <h3>Best practices pentru SHAP</h3>
     <h4>Recomandari:</h4>
     <ul>
-    <li><strong>Pre-procesare:</strong> Standardizeaza inputurile pentru consistenta</li>
+    <li><strong>Pre-procesare:</strong> Standardizeaza datele de intrare pentru consistenta</li>
     <li><strong>Baseline:</strong> Alege un baseline reprezentativ si stabil</li>
     <li><strong>Sampling:</strong> Foloseste suficiente sample-uri pentru stabilitate</li>
     <li><strong>Caching:</strong> Salveaza rezultatele pentru analize repetitive</li>
     <li><strong>Validare:</strong> Verifica ca suma valorilor SHAP = predictia - baseline</li>
     </ul>
     
-    <h4>Atentii:</h4>
+    <h4>Atentie:</h4>
     <ul>
     <li>Nu incerca SHAP pe texte foarte lungi fara optimizari</li>
     <li>Monitorizeaza memoria pentru modele mari</li>
@@ -436,7 +436,7 @@ with col2:
     <li><strong>Multiple runs:</strong> Ruleaza de mai multe ori si media rezultatele</li>
     </ul>
     
-    <h4>Atentii:</h4>
+    <h4>Atentie:</h4>
     <ul>
     <li>Rezultatele pot varia - ruleaza multiplu pentru incredere</li>
     <li>Verifica ca perturbatiile sunt realiste</li>
@@ -451,7 +451,7 @@ st.markdown('<h2 class="section-header">Recomandari finale</h2>', unsafe_allow_h
 
 st.markdown("""
 <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 2rem; border-radius: 15px; color: white; margin: 2rem 0;">
-<h3 style="color: white; text-align: center; margin-bottom: 1.5rem;">Principii ghiduitoare pentru XAI in NLP</h3>
+<h3 style="color: white; text-align: center; margin-bottom: 1.5rem;">Ghid pentru XAI in NLP</h3>
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
 <div>
@@ -467,7 +467,7 @@ st.markdown("""
 <div>
 <h4 style="color: white;">Pentru expertii:</h4>
 <ul style="color: white;">
-<li>Foloseste SHAP pentru rigoritate maxima</li>
+<li>Foloseste SHAP pentru rigurozitate maxima</li>
 <li>Combina multiple tehnici pentru perspective complete</li>
 <li>Contribuie la imbunatatirea metodelor existente</li>
 <li>Valideaza explicatiile cu experti din domeniu</li>

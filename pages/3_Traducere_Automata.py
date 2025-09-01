@@ -294,7 +294,7 @@ if st.button("Tradu si analizeaza", type="primary"):
                         col1, col2 = st.columns([2, 1])
                         
                         with col1:
-                            st.markdown('<h4>Contributiile SHAP pentru traducere</h4>')
+                            st.markdown('<h4>Contributiile SHAP pentru traducere</h4>', unsafe_allow_html=True)
                             
                             # Get the tokens and their SHAP values
                             tokens = shap_values[0].data
@@ -325,37 +325,45 @@ if st.button("Tradu si analizeaza", type="primary"):
                             st.dataframe(styled_shap, use_container_width=True)
                         
                         with col2:
-                            st.markdown('<h4>Vizualizare SHAP</h4>')
+                            st.markdown('<h3 class="subsection-header">Vizualizare SHAP</h3>', unsafe_allow_html=True)
                             
-                            # SHAP bar plot
-                            fig, ax = plt.subplots(figsize=(8, 6))
-                            
+                            # Get top positive and negative contributors
                             top_positive = shap_df[shap_df['Contributie_SHAP'] > 0].head(5)
                             top_negative = shap_df[shap_df['Contributie_SHAP'] < 0].head(5)
                             
                             combined = pd.concat([top_positive, top_negative]).sort_values('Contributie_SHAP')
                             
                             if len(combined) > 0:
+                                # Use Plotly instead of matplotlib to avoid pixel limits
+                                import plotly.graph_objects as go
+                                
                                 colors = ['red' if x < 0 else 'green' for x in combined['Contributie_SHAP']]
                                 
-                                bars = ax.barh(range(len(combined)), combined['Contributie_SHAP'], color=colors, alpha=0.7)
-                                ax.set_yticks(range(len(combined)))
-                                ax.set_yticklabels(combined['Token'])
-                                ax.set_xlabel('Contributie SHAP')
-                                ax.set_title('Contributii SHAP pentru traducere')
-                                ax.axvline(x=0, color='black', linestyle='-', alpha=0.3)
+                                fig = go.Figure()
                                 
-                                # Add value labels
-                                for i, bar in enumerate(bars):
-                                    width = bar.get_width()
-                                    ax.text(width + (0.0001 if width > 0 else -0.0001), 
-                                           bar.get_y() + bar.get_height()/2,
-                                           f'{width:.4f}', ha='left' if width > 0 else 'right', 
-                                           va='center', fontsize=9)
-                            
-                            plt.tight_layout()
-                            st.pyplot(fig)
-                            plt.close()
+                                fig.add_trace(go.Bar(
+                                    y=combined['Token'],
+                                    x=combined['Contributie_SHAP'],
+                                    orientation='h',
+                                    marker_color=colors,
+                                    text=[f'{val:.3f}' for val in combined['Contributie_SHAP']],
+                                    textposition='outside',
+                                    name='Contributii SHAP'
+                                ))
+                                
+                                fig.update_layout(
+                                    title='Top contributori pentru traducere',
+                                    xaxis_title='Valoare SHAP',
+                                    yaxis_title='Token',
+                                    height=400,
+                                    showlegend=False,
+                                    margin=dict(l=20, r=20, t=40, b=20)
+                                )
+                                
+                                # Add vertical line at x=0
+                                fig.add_vline(x=0, line_dash="dash", line_color="black", opacity=0.3)
+                                
+                                st.plotly_chart(fig, use_container_width=True)
                     
                     except Exception as e:
                         st.error(f"Eroare la calcularea SHAP pentru traducere: {str(e)}")
@@ -405,8 +413,7 @@ if st.button("Tradu si analizeaza", type="primary"):
                         
                         # Create LIME explainer
                         lime_explainer = LimeTextExplainer(
-                            class_names=['Traducere slaba', 'Traducere buna'],
-                            mode='classification'
+                            class_names=['Traducere slaba', 'Traducere buna']
                         )
                         
                         lime_exp = lime_explainer.explain_instance(
@@ -419,7 +426,7 @@ if st.button("Tradu si analizeaza", type="primary"):
                         col1, col2 = st.columns([2, 1])
                         
                         with col1:
-                            st.markdown('<h4>Contributiile LIME pentru traducere</h4>')
+                            st.markdown('<h4>Contributiile LIME pentru traducere</h4>', unsafe_allow_html=True)
                             
                             # Get LIME features
                             lime_features = lime_exp.as_list()
@@ -445,11 +452,11 @@ if st.button("Tradu si analizeaza", type="primary"):
                                 st.warning("Nu s-au putut extrage caracteristici LIME.")
                         
                         with col2:
-                            st.markdown('<h4>Vizualizare LIME</h4>')
+                            st.markdown('<h4>Vizualizare LIME</h4>', unsafe_allow_html=True)
                             
                             if lime_features:
-                                # LIME bar plot
-                                fig, ax = plt.subplots(figsize=(8, 6))
+                                # LIME bar plot - reduced size to avoid pixel limit
+                                fig, ax = plt.subplots(figsize=(6, 4))
                                 
                                 words, importance = zip(*lime_features)
                                 colors = ['red' if imp < 0 else 'green' for imp in importance]
@@ -474,7 +481,7 @@ if st.button("Tradu si analizeaza", type="primary"):
                                 plt.close()
                         
                         # LIME Text highlighting
-                        st.markdown('<h4>Text evidentiat (LIME)</h4>')
+                        st.markdown('<h4>Text evidentiat (LIME)</h4>', unsafe_allow_html=True)
                         
                         with st.expander("Vezi explicatia LIME completa", expanded=True):
                             # Show LIME explanation as HTML

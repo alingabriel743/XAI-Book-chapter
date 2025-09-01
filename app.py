@@ -22,7 +22,7 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     st.markdown("""
     <div class="info-box">
-    <h2 style="text-align: center; color: #1f77b4; margin-bottom: 1rem;">Bun venit la demonstratiile XAI!</h2>
+    <h2 style="text-align: center; color: #1f77b4; margin-bottom: 1rem;">Aplicatii practice XAI pe domeniul NLP</h2>
     <p style="font-size: 1.1rem; line-height: 1.6;">
     Aceasta aplicatie interactiva demonstreaza aplicarea tehnicilor de explicabilitate in inteligenta artificiala (XAI) in procesarea limbajului natural. Vei explora cum functioneaza SHAP si LIME pentru a intelege deciziile modelelor de inteligenta artificiala.
     </p>

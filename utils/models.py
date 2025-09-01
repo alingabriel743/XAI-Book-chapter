@@ -34,16 +34,71 @@ def load_translation_model():
         return None, None
 
 @st.cache_resource
-def load_generation_model():
+def load_generation_model(model_name="gpt2"):
     """Load text generation model and tokenizer"""
     try:
-        model_name = "gpt2"
-        tokenizer = GPT2Tokenizer.from_pretrained(model_name)
-        model = GPT2LMHeadModel.from_pretrained(model_name)
-        tokenizer.pad_token = tokenizer.eos_token
+        if "qwen" in model_name.lower():
+            # For Qwen models - handle dtype compatibility issues
+            from transformers import AutoTokenizer, AutoModelForCausalLM
+            import os
+            
+            # Set environment variable to avoid autocast issues
+            os.environ["TOKENIZERS_PARALLELISM"] = "false"
+            
+            tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+            
+            # Try loading with different configurations to handle dtype issues
+            try:
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_name, 
+                    trust_remote_code=True,
+                    torch_dtype=torch.float32,
+                    low_cpu_mem_usage=True,
+                    use_safetensors=True
+                )
+            except Exception:
+                # Fallback: try without safetensors
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_name, 
+                    trust_remote_code=True,
+                    torch_dtype=torch.float32,
+                    low_cpu_mem_usage=True,
+                    use_safetensors=False
+                )
+            
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
+        elif "deepseek" in model_name.lower():
+            # For DeepSeek models
+            from transformers import AutoTokenizer, AutoModelForCausalLM
+            tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                trust_remote_code=True,
+                torch_dtype=torch.float32,
+                low_cpu_mem_usage=True
+            )
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
+        else:
+            # For all GPT-2 variants (gpt2, gpt2-medium, distilgpt2)
+            from transformers import GPT2Tokenizer, GPT2LMHeadModel
+            tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+            model = GPT2LMHeadModel.from_pretrained(model_name)
+            tokenizer.pad_token = tokenizer.eos_token
+        
         return tokenizer, model
     except Exception as e:
-        st.error(f"Eroare la incarcarea modelului de generare: {str(e)}")
+        error_msg = str(e)
+        st.error(f"Eroare la incarcarea modelului de generare {model_name}: {error_msg}")
+        
+        if "qwen" in model_name.lower():
+            st.info("Modelul Qwen poate avea probleme de compatibilitate pe anumite sisteme. Incearca cu GPT-2 Medium sau GPT-Neo ca alternativa.")
+        elif "unsupported scalarType" in error_msg:
+            st.info("Problema de tip de date detectata. Incearca cu un alt model sau restarteza aplicatia.")
+        else:
+            st.info("Anumite modele mari necesita mai multa memorie. Incearca cu GPT-2 pentru un test rapid.")
+        
         return None, None
 
 def predict_sentiment(text, tokenizer, model):
@@ -112,20 +167,60 @@ def generate_text(prompt, tokenizer, model, max_length=50, temperature=0.7):
     
     inputs = tokenizer(prompt, return_tensors="pt")
     
-    with torch.no_grad():
-        outputs = model.generate(
-            inputs['input_ids'],
-            max_length=len(inputs['input_ids'][0]) + max_length,
-            temperature=temperature,
-            do_sample=True,
-            pad_token_id=tokenizer.eos_token_id,
-            attention_mask=inputs['attention_mask'],
-            output_attentions=True,
-            return_dict_in_generate=True
-        )
-    
-    generated_text = tokenizer.decode(outputs.sequences[0], skip_special_tokens=True)
-    return generated_text, outputs
+    # Handle potential dtype issues with certain models
+    try:
+        with torch.no_grad():
+            # Force autocast off to prevent dtype issues
+            with torch.autocast(device_type='cpu', enabled=False):
+                # Prepare generation parameters
+                gen_kwargs = {
+                    'input_ids': inputs['input_ids'],
+                    'max_length': len(inputs['input_ids'][0]) + max_length,
+                    'temperature': temperature,
+                    'do_sample': True,
+                    'pad_token_id': tokenizer.eos_token_id if tokenizer.eos_token_id is not None else tokenizer.pad_token_id,
+                    'attention_mask': inputs['attention_mask'] if 'attention_mask' in inputs else None,
+                    'output_attentions': True,
+                    'return_dict_in_generate': True,
+                    'repetition_penalty': 1.1,  # Prevent repetition
+                    'top_p': 0.95,  # Add nucleus sampling
+                }
+                
+                # Remove None values
+                gen_kwargs = {k: v for k, v in gen_kwargs.items() if v is not None}
+                
+                outputs = model.generate(**gen_kwargs)
+        
+        generated_text = tokenizer.decode(outputs.sequences[0], skip_special_tokens=True)
+        return generated_text, outputs
+        
+    except Exception as e:
+        # Fallback: generate without attention outputs if there are dtype issues
+        try:
+            with torch.no_grad():
+                with torch.autocast(device_type='cpu', enabled=False):
+                    # Simplified generation parameters for fallback
+                    fallback_kwargs = {
+                        'input_ids': inputs['input_ids'],
+                        'max_length': len(inputs['input_ids'][0]) + max_length,
+                        'temperature': temperature,
+                        'do_sample': True,
+                        'pad_token_id': tokenizer.eos_token_id if tokenizer.eos_token_id is not None else tokenizer.pad_token_id,
+                        'repetition_penalty': 1.1,
+                        'top_p': 0.95
+                    }
+                    
+                    # Remove None values
+                    fallback_kwargs = {k: v for k, v in fallback_kwargs.items() if v is not None}
+                    
+                    outputs = model.generate(**fallback_kwargs)
+            
+            generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            return generated_text, None
+            
+        except Exception as e2:
+            print(f"Text generation failed: {e2}")
+            return None, None
 
 # Model status cache
 @st.cache_data

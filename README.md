@@ -23,7 +23,6 @@ Aplicatie interactiva Streamlit pentru demonstrarea tehnicilor de Explicabilitat
 - **LIME (Local Interpretable Model-agnostic Explanations)**:
   - Explicatii locale pentru instante individuale
   - Perturbari ale textului de intrare
-  - Modele surrogate interpretabile
   - Vizualizari intuitive
 
 ### Modele suportate
@@ -174,9 +173,6 @@ Proiectul este creat pentru uz educational in cadrul unei carti despre XAI.
 - [Hugging Face Transformers](https://huggingface.co/docs/transformers)
 - [Streamlit Documentation](https://docs.streamlit.io/)
 
-## Licenta
-
-Acest proiect este creat pentru uz educational ca parte a unei carti despre XAI in procesarea limbajului natural.
 
 ## Nota importanta
 

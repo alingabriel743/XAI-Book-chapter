@@ -44,37 +44,112 @@ Cu XAI, putem analiza <strong>probabilitatile</strong> pentru fiecare cuvant gen
 </div>
 """, unsafe_allow_html=True)
 
-# Model information
-st.markdown('<h2 class="section-header">Modelul de generare</h2>', unsafe_allow_html=True)
+# Model selection
+st.markdown('<h2 class="section-header">Selectia modelului de generare</h2>', unsafe_allow_html=True)
 
+# Model options
+model_options = {
+    "GPT-2": {
+        "model_name": "gpt2",
+        "description": "Generative Pre-trained Transformer 2",
+        "parameters": "117M",
+        "vocab_size": "50,257",
+        "strengths": ["Rapid", "Usor de folosit", "Bun pentru incepatori"],
+        "weaknesses": ["Uneori incoherent", "Texte scurte", "Repetitiv"]
+    },
+    "DeepSeek-Coder-1.3B": {
+        "model_name": "deepseek-ai/deepseek-coder-1.3b-base",
+        "description": "DeepSeek's compact coding and text generation model",
+        "parameters": "1.3B",
+        "vocab_size": "32,000",
+        "strengths": ["Foarte coerent", "Excelent la logica", "Modern", "Rapid"],
+        "weaknesses": ["Mai nou", "Focus pe cod", "Resurse moderate"]
+    },
+    "Qwen1.5-1.8B-Chat": {
+        "model_name": "Qwen/Qwen1.5-1.8B-Chat",
+        "description": "Qwen 1.5 - Optimized Chinese/English model",
+        "parameters": "1.8B",
+        "vocab_size": "151,936",
+        "strengths": ["Rapid si eficient", "Multilingual", "Bun compromis", "Text coherent"],
+        "weaknesses": ["Mai nou", "Mai putin testat", "Documentatie limitata"]
+    }
+}
+
+# Model selection
+selected_model_name = st.selectbox(
+    "Alege modelul pentru generarea de text:",
+    list(model_options.keys()),
+    help="Fiecare model are caracteristici diferite - vezi detaliile mai jos"
+)
+
+selected_model = model_options[selected_model_name]
+
+# Display selected model info
 col1, col2, col3 = st.columns(3)
 
 with col1:
     create_metric_box(
         "Model",
-        "GPT-2",
-        "Generative Pre-trained Transformer 2"
+        selected_model_name,
+        selected_model["description"]
     )
 
 with col2:
     create_metric_box(
         "Parametri",
-        "117M",
-        "Modelul de baza GPT-2"
+        selected_model["parameters"],
+        f"Vocabular: {selected_model['vocab_size']} tokens"
     )
 
 with col3:
     create_metric_box(
-        "Vocabular",
-        "50,257",
-        "Token-uri unice"
+        "Status",
+        "Selectat",
+        "Gata pentru generare"
     )
+
+# Model comparison table
+with st.expander("Compara toate modelele disponibile", expanded=False):
+    comparison_data = []
+    for name, info in model_options.items():
+        comparison_data.append({
+            "Model": name,
+            "Parametri": info["parameters"],
+            "Vocabular": info["vocab_size"],
+            "Puncte forte": ", ".join(info["strengths"][:2]),
+            "Limitari": ", ".join(info["weaknesses"][:2])
+        })
+    
+    comparison_df = pd.DataFrame(comparison_data)
+    st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+    
+    # Strengths and weaknesses detail
+    cols = st.columns(len(model_options))
+    for i, (name, info) in enumerate(model_options.items()):
+        with cols[i]:
+            color = "success-box" if name == selected_model_name else "info-box"
+            st.markdown(f"""
+            <div class="{color}">
+            <h4>{name}</h4>
+            <h5>✅ Avantaje:</h5>
+            <ul>
+            {''.join([f'<li>{strength}</li>' for strength in info['strengths']])}
+            </ul>
+            <h5>⚠️ Limitari:</h5>
+            <ul>
+            {''.join([f'<li>{weakness}</li>' for weakness in info['weaknesses']])}
+            </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
 # Load model
 st.markdown('<h2 class="section-header">Generare interactiva cu analiza XAI</h2>', unsafe_allow_html=True)
 
-with st.spinner("Se incarca modelul de generare GPT-2..."):
-    tokenizer, model = load_generation_model()
+# Load the selected model
+model_name = selected_model["model_name"]
+
+with st.spinner(f"Se incarca modelul {selected_model_name}..."):
+    tokenizer, model = load_generation_model(model_name)
 
 if tokenizer is None or model is None:
     st.error("Nu s-a putut incarca modelul. Verifica conexiunea la internet si dependentele.")
@@ -84,16 +159,60 @@ if tokenizer is None or model is None:
 st.markdown('<h3 class="subsection-header">Configureaza generarea de text:</h3>', unsafe_allow_html=True)
 
 # Example prompts
-examples = {
-    "Tehnologie - AI": "The future of artificial intelligence is",
-    "Stiinta - Spatiu": "Space exploration will help humanity",
-    "Educatie": "The most important skill students need to learn",
-    "Mediu - Clima": "Climate change requires immediate action because",
-    "Arta - Creativitate": "Creative writing helps people express",
-    "Poveste - Aventura": "Once upon a time, in a distant galaxy, there was a brave explorer who",
-    "Filosofico": "The meaning of life can be understood through",
-    "Sport - Motivatie": "Athletes achieve greatness by"
+# Model-specific example prompts
+if selected_model_name == "GPT-2":
+    examples = {
+        "Tehnologie - AI": "The future of artificial intelligence is",
+        "Stiinta - Spatiu": "Space exploration will help humanity",
+        "Educatie": "The most important skill students need to learn",
+        "Mediu - Clima": "Climate change requires immediate action because",
+        "Arta - Creativitate": "Creative writing helps people express",
+        "Poveste - Aventura": "Once upon a time, in a distant galaxy, there was a brave explorer who",
+        "Filosofico": "The meaning of life can be understood through",
+        "Sport - Motivatie": "Athletes achieve greatness by"
+    }
+elif selected_model_name == "DeepSeek-Coder-1.3B":
+    examples = {
+        "Technical Explanation": "Machine learning algorithms work by analyzing patterns in data to",
+        "Problem Solving": "When faced with a complex problem, the best approach is to",
+        "Innovation": "The future of artificial intelligence will be shaped by",
+        "Science Discovery": "Recent advances in quantum computing have revealed that",
+        "Logical Analysis": "To understand how neural networks make decisions, we must first",
+        "Technology Impact": "Automation will transform industries by",
+        "Research Process": "Scientific breakthroughs often begin with",
+        "System Design": "An effective software architecture should"
+    }
+elif selected_model_name == "Qwen1.5-1.8B-Chat":
+    examples = {
+        "Multilingual - EN": "The benefits of learning multiple languages include",
+        "Multilingual - CN": "人工智能的未来发展趋势是",
+        "Technical Explanation": "Machine learning algorithms work by",
+        "Creative Writing": "In a world where technology and nature coexist,",
+        "Business Analysis": "The key factors for startup success are",
+        "Educational Content": "The scientific method involves these steps:",
+        "Cultural Exchange": "Understanding different cultures helps us",
+        "Innovation": "The next breakthrough in renewable energy might be"
+    }
+
+# Model-specific information
+model_info_colors = {
+    "GPT-2": "info-box",
+    "DeepSeek-Coder-1.3B": "success-box", 
+    "Qwen1.5-1.8B-Chat": "warning-box"
 }
+
+model_tips = {
+    "GPT-2": "💡 **Tip pentru GPT-2**: Foloseste prompt-uri scurte si directe. Modelul poate deveni repetitiv cu texte lungi.",
+    "DeepSeek-Coder-1.3B": "💡 **Tip pentru DeepSeek**: Model modern si coerent, excelent pentru explicatii tehnice si analiza logica. Functioneaza foarte bine cu prompt-uri structurate si analitice.",
+    "Qwen1.5-1.8B-Chat": "💡 **Tip pentru Qwen**: Suporta multiple limbi. Poti scrie prompt-uri in engleza sau chineza pentru rezultate mai bune."
+}
+
+st.markdown(f"""
+<div class="{model_info_colors[selected_model_name]}">
+<h4>Modelul selectat: {selected_model_name}</h4>
+<p>{model_tips[selected_model_name]}</p>
+</div>
+""", unsafe_allow_html=True)
 
 col1, col2 = st.columns([2, 1])
 
@@ -115,7 +234,7 @@ with col1:
     )
 
 with col2:
-    st.markdown('<h4>Parametri generare:</h4>')
+    st.markdown('Parametri generare:')
     
     max_length = st.slider("Lungimea maxima:", 20, 150, 50, 5)
     temperature = st.slider("Temperatura:", 0.1, 2.0, 0.8, 0.1, 
@@ -130,6 +249,13 @@ with col2:
 # Generate button
 if st.button("Genereaza text si analizeaza", type="primary"):
     if prompt.strip() and prompt != "Write your prompt here...":
+        # Store the generation request in session state
+        st.session_state['current_generation'] = {
+            'prompt': prompt,
+            'max_length': max_length,
+            'temperature': temperature,
+            'model_name': selected_model_name
+        }
         with st.spinner("Se genereaza textul si se analizeaza procesul..."):
             
             # Generate text with analysis
@@ -138,6 +264,31 @@ if st.button("Genereaza text si analizeaza", type="primary"):
             )
             
             if generated_text is not None:
+                # Store results in session state
+                st.session_state['generation_results'] = {
+                    'generated_text': generated_text,
+                    'generation_outputs': generation_outputs,
+                    'prompt': prompt,
+                    'max_length': max_length,
+                    'temperature': temperature,
+                    'model_name': selected_model_name
+                }
+                
+                st.success("Text generat cu succes! Rezultatele sunt afisate mai jos.")
+    
+    else:
+        st.warning("Te rog sa introduci un prompt valid pentru generarea textului.")
+
+# Display results if available (outside of button condition)
+if 'generation_results' in st.session_state and st.session_state['generation_results'] is not None:
+    results = st.session_state['generation_results']
+    generated_text = results['generated_text']
+    generation_outputs = results['generation_outputs']
+    prompt = results['prompt']
+    max_length = results['max_length']
+    temperature = results['temperature']
+    
+    if generated_text is not None:
                 # Results section
                 st.markdown('<h2 class="section-header">Rezultatul generarii</h2>', unsafe_allow_html=True)
                 
@@ -185,47 +336,62 @@ if st.button("Genereaza text si analizeaza", type="primary"):
                 # Token-by-token analysis
                 st.markdown('<h2 class="section-header">Analiza token cu token</h2>', unsafe_allow_html=True)
                 
-                # Get detailed generation info with probabilities
-                with torch.no_grad():
-                    # Re-run generation to get step-by-step probabilities
-                    input_ids = tokenizer(prompt, return_tensors="pt")['input_ids']
-                    
-                    step_by_step_analysis = []
-                    current_input = input_ids.clone()
-                    
-                    for step in range(min(len(generated_tokens), 10)):  # Analyze first 10 tokens
-                        outputs = model(current_input)
-                        logits = outputs.logits[0, -1, :]  # Last position logits
-                        probs = torch.nn.functional.softmax(logits, dim=-1)
+                # Store analysis in session state to prevent recalculation on selectbox change
+                # Use a combination of prompt and generated text length as key
+                analysis_key = f"step_analysis_{len(prompt)}_{len(generated_tokens)}"
+                current_generation_id = f"{prompt}_{generated_text}"
+                
+                # Check if we have the analysis for this exact generation
+                if (analysis_key not in st.session_state or 
+                    st.session_state.get(f"{analysis_key}_id") != current_generation_id):
+                    # Get detailed generation info with probabilities
+                    with torch.no_grad():
+                        # Re-run generation to get step-by-step probabilities
+                        input_ids = tokenizer(prompt, return_tensors="pt")['input_ids']
                         
-                        # Get top-k predictions
-                        top_k_probs, top_k_indices = torch.topk(probs, k=10)
+                        step_by_step_analysis = []
+                        current_input = input_ids.clone()
                         
-                        # Get the actual chosen token
-                        if step < len(generated_tokens):
-                            chosen_token_id = generated_tokens[step]
-                            chosen_token = tokenizer.decode([chosen_token_id])
-                            chosen_prob = probs[chosen_token_id].item()
+                        for step in range(min(len(generated_tokens), 10)):  # Analyze first 10 tokens
+                            outputs = model(current_input)
+                            logits = outputs.logits[0, -1, :]  # Last position logits
+                            probs = torch.nn.functional.softmax(logits, dim=-1)
                             
-                            step_analysis = {
-                                'step': step + 1,
-                                'context': tokenizer.decode(current_input[0]),
-                                'chosen_token': chosen_token,
-                                'chosen_prob': chosen_prob,
-                                'top_alternatives': [
-                                    {
-                                        'token': tokenizer.decode([idx.item()]),
-                                        'prob': prob.item(),
-                                        'token_id': idx.item()
-                                    }
-                                    for prob, idx in zip(top_k_probs, top_k_indices)
-                                ]
-                            }
+                            # Get top-k predictions
+                            top_k_probs, top_k_indices = torch.topk(probs, k=10)
                             
-                            step_by_step_analysis.append(step_analysis)
-                            
-                            # Add chosen token to context for next iteration
-                            current_input = torch.cat([current_input, torch.tensor([[chosen_token_id]])], dim=1)
+                            # Get the actual chosen token
+                            if step < len(generated_tokens):
+                                chosen_token_id = generated_tokens[step]
+                                chosen_token = tokenizer.decode([chosen_token_id])
+                                chosen_prob = probs[chosen_token_id].item()
+                                
+                                step_analysis = {
+                                    'step': step + 1,
+                                    'context': tokenizer.decode(current_input[0]),
+                                    'chosen_token': chosen_token,
+                                    'chosen_prob': chosen_prob,
+                                    'top_alternatives': [
+                                        {
+                                            'token': tokenizer.decode([idx.item()]),
+                                            'prob': prob.item(),
+                                            'token_id': idx.item()
+                                        }
+                                        for prob, idx in zip(top_k_probs, top_k_indices)
+                                    ]
+                                }
+                                
+                                step_by_step_analysis.append(step_analysis)
+                                
+                                # Add chosen token to context for next iteration
+                                current_input = torch.cat([current_input, torch.tensor([[chosen_token_id]])], dim=1)
+                    
+                    # Store in session state with generation ID
+                    st.session_state[analysis_key] = step_by_step_analysis
+                    st.session_state[f"{analysis_key}_id"] = current_generation_id
+                
+                # Retrieve from session state
+                step_by_step_analysis = st.session_state[analysis_key]
                 
                 if step_by_step_analysis:
                     # Display step-by-step analysis
@@ -235,7 +401,8 @@ if st.button("Genereaza text si analizeaza", type="primary"):
                     selected_step = st.selectbox(
                         "Selecteaza pasul pentru analiza detaliata:",
                         range(1, len(step_by_step_analysis) + 1),
-                        format_func=lambda x: f"Pasul {x}: Token '{step_by_step_analysis[x-1]['chosen_token'].strip()}'"
+                        format_func=lambda x: f"Pasul {x}: Token '{step_by_step_analysis[x-1]['chosen_token'].strip()}'",
+                        key=f"step_selector_{analysis_key}"
                     )
                     
                     current_step = step_by_step_analysis[selected_step - 1]
@@ -243,7 +410,7 @@ if st.button("Genereaza text si analizeaza", type="primary"):
                     col1, col2 = st.columns([1, 1])
                     
                     with col1:
-                        st.markdown('<h4>Token ales si alternative</h4>')
+                        st.markdown('Token ales si alternative')
                         
                         # Show chosen token with probability
                         st.markdown(f"""
@@ -255,7 +422,7 @@ if st.button("Genereaza text si analizeaza", type="primary"):
                         """, unsafe_allow_html=True)
                         
                         # Show top alternatives
-                        st.markdown('<h4>Top alternative considerate:</h4>')
+                        st.markdown('Top alternative considerate:')
                         
                         alternatives_df = pd.DataFrame(current_step['top_alternatives'][:8])
                         alternatives_df['prob_percent'] = alternatives_df['prob'] * 100
@@ -276,7 +443,7 @@ if st.button("Genereaza text si analizeaza", type="primary"):
                         st.dataframe(styled_df, use_container_width=True, hide_index=True)
                     
                     with col2:
-                        st.markdown('<h4>Distributia probabilitatilor</h4>')
+                        st.markdown('Distributia probabilitatilor')
                         
                         # Probability distribution plot
                         fig, ax = plt.subplots(figsize=(8, 6))
@@ -380,9 +547,20 @@ if st.button("Genereaza text si analizeaza", type="primary"):
                     
                     else:
                         st.info("Nu sunt suficiente date pentru vizualizarea evolutiei.")
-    
-    else:
-        st.warning("Te rog sa introduci un prompt valid pentru generarea textului.")
+
+    # Add a button to clear results and generate new text
+    st.markdown("---")
+    if st.button("Genereaza text nou", type="secondary"):
+        # Clear the session state to allow new generation
+        if 'generation_results' in st.session_state:
+            del st.session_state['generation_results']
+        if 'current_generation' in st.session_state:
+            del st.session_state['current_generation']
+        # Clear all analysis cache
+        keys_to_remove = [key for key in st.session_state.keys() if key.startswith('step_analysis_')]
+        for key in keys_to_remove:
+            del st.session_state[key]
+        st.rerun()
 
 # Educational section
 st.markdown('<h2 class="section-header">Importanta XAI in generarea de text</h2>', unsafe_allow_html=True)

@@ -95,7 +95,7 @@ with col1:
     st.markdown("""
     <div class="success-box">
     <h4>Fundamentul matematic</h4>
-    <p>SHAP se bazeaza pe <strong>teoria jocurilor</strong> si conceptul de <strong>valori Shapley</strong>, oferind o metoda matematic riguroasa pentru atribuirea importantei fiecarui feature.</p>
+    <p>SHAP se bazeaza pe <strong>teoria jocurilor</strong> si conceptul de <strong>valori Shapley</strong>, oferind o metoda matematica pentru atribuirea importantei fiecarui feature.</p>
     
     <h4>Proprietati garantate</h4>
     <ul>
@@ -119,7 +119,6 @@ with col2:
     <div class="metric-container">
     <h4 style="color: #1f77b4;">Avantaje SHAP</h4>
     <ul>
-    <li>Rigor matematic</li>
     <li>Explicatii consistente</li>
     <li>Suport pentru orice model</li>
     <li>Vizualizari bogate</li>
@@ -165,7 +164,7 @@ with col1:
     <ul>
     <li><strong>Model-agnostic:</strong> Functioneaza cu orice algoritm</li>
     <li><strong>Local:</strong> Explica predictii individuale</li>
-    <li><strong>Interpretabil:</strong> Foloseste modele simple si intelese</li>
+    <li><strong>Interpretabil:</strong> Foloseste modele simple si usor de inteles</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -295,7 +294,7 @@ best_practices = [
     "**Combina multiple metode:** Foloseste atat SHAP cat si LIME pentru perspective diferite",
     "**Testeaza pe date diverse:** Asigura-te ca explicatiile functioneaza pe diferite tipuri de text",
     "**Adapteaza pentru audienta:** Simplificati explicatiile pentru utilizatorii finali",
-    "**Monitorizeaza in timp:** Explicabilitatea poate se schimbe odata cu modelul",
+    "**Monitorizeaza in timp:** Explicabilitatea poate sa se schimbe odata cu modelul",
     "**Documenteaza limitarile:** Fii transparent despre ce nu poate explica metoda",
     "**Considera implicatiile etice:** Asigura-te ca explicatiile nu perpetueaza bias-uri"
 ]

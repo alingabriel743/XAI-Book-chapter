@@ -380,20 +380,53 @@ if st.button("Analizeaza sentimentul", type="primary"):
                         # LIME HTML visualization
                         st.markdown('<h3 class="subsection-header">Text highlighting (LIME)</h3>', unsafe_allow_html=True)
                         
-                        # Create HTML visualization
-                        html_exp = lime_exp.as_html()
-                        
                         # Display in an expandable section
                         with st.expander("Vezi textul evidentiat", expanded=True):
-                            # Extract and clean the HTML
-                            import re
-                            # Find the div with the explanation
-                            html_match = re.search(r'<div[^>]*>.*?</div>', html_exp, re.DOTALL)
-                            if html_match:
-                                html_content = html_match.group()
-                                st.components.v1.html(html_content, height=200)
-                            else:
-                                st.markdown("Nu s-a putut genera vizualizarea HTML.")
+                            try:
+                                # Get the HTML explanation
+                                html_exp = lime_exp.as_html()
+                                
+                                # Display the full HTML directly
+                                st.components.v1.html(html_exp, height=400, scrolling=True)
+                                
+                            except Exception as html_error:
+                                st.error(f"Eroare la generarea HTML: {str(html_error)}")
+                                
+                                # Alternative: Create manual highlighting
+                                st.markdown("**Explicatie alternativa:**")
+                                
+                                # Get feature importance from LIME
+                                lime_features = lime_exp.as_list()
+                                
+                                # Create colored text manually
+                                text_parts = text_input.split()
+                                colored_text = []
+                                
+                                feature_dict = {feat[0]: feat[1] for feat in lime_features}
+                                
+                                for word in text_parts:
+                                    if word in feature_dict:
+                                        importance = feature_dict[word]
+                                        if importance > 0:
+                                            color = "green"
+                                            alpha = min(abs(importance) * 2, 1)
+                                        else:
+                                            color = "red"  
+                                            alpha = min(abs(importance) * 2, 1)
+                                        
+                                        colored_text.append(
+                                            f'<span style="background-color: {color}; opacity: {alpha}; padding: 2px 4px; margin: 1px; border-radius: 3px;">{word}</span>'
+                                        )
+                                    else:
+                                        colored_text.append(word)
+                                
+                                st.markdown(" ".join(colored_text), unsafe_allow_html=True)
+                                
+                                st.markdown("""
+                                **Legenda:**
+                                - <span style="background-color: green; padding: 2px 4px; border-radius: 3px;">Verde</span> = Contribuie pozitiv la predictie
+                                - <span style="background-color: red; padding: 2px 4px; border-radius: 3px;">Rosu</span> = Contribuie negativ la predictie
+                                """, unsafe_allow_html=True)
                     
                     except Exception as e:
                         st.error(f"Eroare la calcularea LIME: {str(e)}")
