@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 
 # Add the parent directory to the Python path
 try:
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(_file_))))
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 except:
     # Fallback for deployment environments
     sys.path.append('..')
@@ -68,6 +68,14 @@ model_options = {
         "vocab_size": "151,936",
         "strengths": ["Foarte rapid", "Modern", "Eficient", "Multilingual"],
         "weaknesses": ["Mai mic vocabular activ", "Texte mai scurte", "Capacitate limitata"]
+    },
+    "OPT-350M": {
+        "model_name": "facebook/opt-350m",
+        "description": "Meta's Open Pre-trained Transformer",
+        "parameters": "350M",
+        "vocab_size": "50,272",
+        "strengths": ["Meta/Facebook", "Bun compromis", "Rapid", "Open source"],
+        "weaknesses": ["Mai putin specializat", "Performanta moderata", "Capacitate limitata"]
     }
 }
 
@@ -154,7 +162,6 @@ if tokenizer is None or model is None:
 # Input section
 st.markdown('<h3 class="subsection-header">Configureaza generarea de text:</h3>', unsafe_allow_html=True)
 
-# Example prompts
 # Model-specific example prompts
 if selected_model_name == "GPT-2":
     examples = {
