@@ -68,14 +68,6 @@ model_options = {
         "vocab_size": "151,936",
         "strengths": ["Foarte rapid", "Modern", "Eficient", "Multilingual"],
         "weaknesses": ["Mai mic vocabular activ", "Texte mai scurte", "Capacitate limitata"]
-    },
-    "OPT-350M": {
-        "model_name": "facebook/opt-350m",
-        "description": "Meta's Open Pre-trained Transformer",
-        "parameters": "350M",
-        "vocab_size": "50,272",
-        "strengths": ["Meta/Facebook", "Bun compromis", "Rapid", "Open source"],
-        "weaknesses": ["Mai putin specializat", "Performanta moderata", "Capacitate limitata"]
     }
 }
 

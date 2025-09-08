@@ -72,7 +72,7 @@ def load_generation_model(model_name="gpt2"):
             # For OPT models (Meta/Facebook)
             from transformers import AutoTokenizer, AutoModelForCausalLM
             tokenizer = AutoTokenizer.from_pretrained(model_name)
-            model = AutoModelForCausalLM.from_pretrained(model_name)
+            model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float32, low_cpu_mem_usage=True)
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
         else:
