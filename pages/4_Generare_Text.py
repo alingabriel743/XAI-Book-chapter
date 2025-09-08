@@ -69,13 +69,13 @@ model_options = {
         "strengths": ["Foarte rapid", "Modern", "Eficient", "Multilingual"],
         "weaknesses": ["Mai mic vocabular activ", "Texte mai scurte", "Capacitate limitata"]
     },
-    "DialoGPT-small": {
-        "model_name": "microsoft/DialoGPT-small",
-        "description": "Microsoft's conversational AI model",
-        "parameters": "117M",
-        "vocab_size": "50,257",
-        "strengths": ["Conversational", "Rapid", "Stabil", "Microsoft"],
-        "weaknesses": ["Focus pe dialog", "Mai putin creativ", "Stil conversational"]
+    "OPT-350M": {
+        "model_name": "facebook/opt-350m",
+        "description": "Meta's Open Pre-trained Transformer",
+        "parameters": "350M",
+        "vocab_size": "50,272",
+        "strengths": ["Meta/Facebook", "Bun compromis", "Rapid", "Open source"],
+        "weaknesses": ["Mai putin specializat", "Performanta moderata", "Capacitate limitata"]
     }
 }
 
@@ -186,29 +186,29 @@ elif selected_model_name == "Qwen2-0.5B":
         "Cultural Exchange": "Understanding different cultures helps us",
         "Innovation": "The next breakthrough in renewable energy might be"
     }
-elif selected_model_name == "DialoGPT-small":
+elif selected_model_name == "OPT-350M":
     examples = {
-        "Conversational": "Hello! How are you doing today?",
-        "Question": "What do you think about artificial intelligence?",
-        "Advice": "I need some advice about learning programming.",
-        "Discussion": "Let's talk about the future of technology.",
-        "Help": "Can you help me understand machine learning?",
-        "Opinion": "What's your opinion on social media?",
-        "Chat": "Hi there! What's on your mind?",
-        "Support": "I'm feeling stressed about work. Any suggestions?"
+        "General Knowledge": "The most important discovery in science was",
+        "Technology": "Artificial intelligence will change the world by",
+        "Creative Writing": "In the year 2050, people will live in cities that",
+        "Education": "The best way to learn new skills is",
+        "Philosophy": "The meaning of happiness can be found through",
+        "Innovation": "The next big technological breakthrough will be",
+        "Society": "Social media has transformed communication by",
+        "Future": "In the future, work will be different because"
     }
 
 # Model-specific information
 model_info_colors = {
     "GPT-2": "info-box",
     "Qwen2-0.5B": "success-box", 
-    "DialoGPT-small": "warning-box"
+    "OPT-350M": "warning-box"
 }
 
 model_tips = {
     "GPT-2": "💡 *Tip pentru GPT-2*: Foloseste prompt-uri scurte si directe. Modelul poate deveni repetitiv cu texte lungi.",
     "Qwen2-0.5B": "💡 *Tip pentru Qwen2-0.5B*: Model compact si modern, suporta multiple limbi. Functioneaza bine cu prompt-uri scurte si directe. Ideal pentru deployment-uri cu resurse limitate.",
-    "DialoGPT-small": "💡 *Tip pentru DialoGPT-small*: Model optimizat pentru conversatii de la Microsoft. Functioneaza excelent cu prompt-uri in stil dialog si intrebari directe."
+    "OPT-350M": "💡 *Tip pentru OPT-350M*: Model de la Meta/Facebook, bun compromis intre performanta si eficienta. Functioneaza bine cu prompt-uri generale si explicative."
 }
 
 st.markdown(f"""

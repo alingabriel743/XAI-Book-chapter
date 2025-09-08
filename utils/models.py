@@ -68,8 +68,8 @@ def load_generation_model(model_name="gpt2"):
             
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
-        elif "dialogpt" in model_name.lower():
-            # For DialoGPT models (Microsoft)
+        elif "opt" in model_name.lower():
+            # For OPT models (Meta/Facebook)
             from transformers import AutoTokenizer, AutoModelForCausalLM
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = AutoModelForCausalLM.from_pretrained(model_name)
