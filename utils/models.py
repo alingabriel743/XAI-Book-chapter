@@ -68,8 +68,8 @@ def load_generation_model(model_name="gpt2"):
             
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
-        elif "deepseek" in model_name.lower():
-            # For DeepSeek models
+        elif "tinyllama" in model_name.lower():
+            # For TinyLlama models
             from transformers import AutoTokenizer, AutoModelForCausalLM
             tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
             model = AutoModelForCausalLM.from_pretrained(

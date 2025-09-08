@@ -1,3 +1,4 @@
 __pycache__/
 SHAP si LIME in Streamlit.docx
 venv
+.DS_Store/

@@ -57,21 +57,21 @@ model_options = {
         "strengths": ["Rapid", "Usor de folosit", "Bun pentru incepatori"],
         "weaknesses": ["Uneori incoherent", "Texte scurte", "Repetitiv"]
     },
-    "DeepSeek-Coder-1.3B": {
-        "model_name": "deepseek-ai/deepseek-coder-1.3b-base",
-        "description": "DeepSeek's compact coding and text generation model",
-        "parameters": "1.3B",
-        "vocab_size": "32,000",
-        "strengths": ["Foarte coerent", "Excelent la logica", "Modern", "Rapid"],
-        "weaknesses": ["Mai nou", "Focus pe cod", "Resurse moderate"]
-    },
-    "Qwen1.5-1.8B-Chat": {
-        "model_name": "Qwen/Qwen1.5-1.8B-Chat",
-        "description": "Qwen 1.5 - Optimized Chinese/English model",
-        "parameters": "1.8B",
+    "Qwen2-0.5B": {
+        "model_name": "Qwen/Qwen2-0.5B",
+        "description": "Qwen 2.0 - Compact and efficient model",
+        "parameters": "0.5B",
         "vocab_size": "151,936",
-        "strengths": ["Rapid si eficient", "Multilingual", "Bun compromis", "Text coherent"],
-        "weaknesses": ["Mai nou", "Mai putin testat", "Documentatie limitata"]
+        "strengths": ["Foarte rapid", "Modern", "Eficient", "Multilingual"],
+        "weaknesses": ["Mai mic vocabular activ", "Texte mai scurte", "Capacitate limitata"]
+    },
+    "TinyLlama-1.1B-Chat": {
+        "model_name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        "description": "Compact Llama model optimized for chat",
+        "parameters": "1.1B",
+        "vocab_size": "32,000",
+        "strengths": ["Familia Llama", "Optimizat chat", "Rapid", "Coerent"],
+        "weaknesses": ["Model mai nou", "Vocabular redus", "Performanta moderata"]
     }
 }
 
@@ -171,18 +171,7 @@ if selected_model_name == "GPT-2":
         "Filosofico": "The meaning of life can be understood through",
         "Sport - Motivatie": "Athletes achieve greatness by"
     }
-elif selected_model_name == "DeepSeek-Coder-1.3B":
-    examples = {
-        "Technical Explanation": "Machine learning algorithms work by analyzing patterns in data to",
-        "Problem Solving": "When faced with a complex problem, the best approach is to",
-        "Innovation": "The future of artificial intelligence will be shaped by",
-        "Science Discovery": "Recent advances in quantum computing have revealed that",
-        "Logical Analysis": "To understand how neural networks make decisions, we must first",
-        "Technology Impact": "Automation will transform industries by",
-        "Research Process": "Scientific breakthroughs often begin with",
-        "System Design": "An effective software architecture should"
-    }
-elif selected_model_name == "Qwen1.5-1.8B-Chat":
+elif selected_model_name == "Qwen2-0.5B":
     examples = {
         "Multilingual - EN": "The benefits of learning multiple languages include",
         "Multilingual - CN": "人工智能的未来发展趋势是",
@@ -193,18 +182,29 @@ elif selected_model_name == "Qwen1.5-1.8B-Chat":
         "Cultural Exchange": "Understanding different cultures helps us",
         "Innovation": "The next breakthrough in renewable energy might be"
     }
+elif selected_model_name == "TinyLlama-1.1B-Chat":
+    examples = {
+        "Conversational": "Hello! I'm here to help you with",
+        "Problem Solving": "When faced with a difficult challenge, I would",
+        "Creative Writing": "Once upon a time, in a magical forest, there lived",
+        "Technical Help": "To solve this programming problem, we need to",
+        "Educational": "Let me explain how artificial intelligence works:",
+        "Storytelling": "The brave knight embarked on a quest to",
+        "Advice": "The most important thing to remember is",
+        "Innovation": "The future of technology will bring us"
+    }
 
 # Model-specific information
 model_info_colors = {
     "GPT-2": "info-box",
-    "DeepSeek-Coder-1.3B": "success-box", 
-    "Qwen1.5-1.8B-Chat": "warning-box"
+    "Qwen2-0.5B": "success-box", 
+    "TinyLlama-1.1B-Chat": "warning-box"
 }
 
 model_tips = {
     "GPT-2": "💡 **Tip pentru GPT-2**: Foloseste prompt-uri scurte si directe. Modelul poate deveni repetitiv cu texte lungi.",
-    "DeepSeek-Coder-1.3B": "💡 **Tip pentru DeepSeek**: Model modern si coerent, excelent pentru explicatii tehnice si analiza logica. Functioneaza foarte bine cu prompt-uri structurate si analitice.",
-    "Qwen1.5-1.8B-Chat": "💡 **Tip pentru Qwen**: Suporta multiple limbi. Poti scrie prompt-uri in engleza sau chineza pentru rezultate mai bune."
+    "Qwen2-0.5B": "💡 **Tip pentru Qwen2-0.5B**: Model compact si modern, suporta multiple limbi. Functioneaza bine cu prompt-uri scurte si directe. Ideal pentru deployment-uri cu resurse limitate.",
+    "TinyLlama-1.1B-Chat": "💡 **Tip pentru TinyLlama**: Model optimizat pentru conversatii, din familia Llama. Functioneaza excelent cu prompt-uri conversationale si interactive."
 }
 
 st.markdown(f"""
