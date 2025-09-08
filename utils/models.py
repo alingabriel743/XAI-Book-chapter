@@ -68,16 +68,11 @@ def load_generation_model(model_name="gpt2"):
             
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
-        elif "tinyllama" in model_name.lower():
-            # For TinyLlama models
+        elif "dialogpt" in model_name.lower():
+            # For DialoGPT models (Microsoft)
             from transformers import AutoTokenizer, AutoModelForCausalLM
-            tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                trust_remote_code=True,
-                torch_dtype=torch.float32,
-                low_cpu_mem_usage=True
-            )
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model = AutoModelForCausalLM.from_pretrained(model_name)
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
         else:

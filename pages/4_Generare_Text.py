@@ -10,7 +10,7 @@ from collections import Counter
 import plotly.graph_objects as go
 
 # Add the parent directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(_file_))))
 
 from utils.styles import apply_custom_css, create_info_box, create_metric_box
 from utils.models import load_generation_model, generate_text
@@ -65,13 +65,13 @@ model_options = {
         "strengths": ["Foarte rapid", "Modern", "Eficient", "Multilingual"],
         "weaknesses": ["Mai mic vocabular activ", "Texte mai scurte", "Capacitate limitata"]
     },
-    "TinyLlama-1.1B-Chat": {
-        "model_name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-        "description": "Compact Llama model optimized for chat",
-        "parameters": "1.1B",
-        "vocab_size": "32,000",
-        "strengths": ["Familia Llama", "Optimizat chat", "Rapid", "Coerent"],
-        "weaknesses": ["Model mai nou", "Vocabular redus", "Performanta moderata"]
+    "DialoGPT-small": {
+        "model_name": "microsoft/DialoGPT-small",
+        "description": "Microsoft's conversational AI model",
+        "parameters": "117M",
+        "vocab_size": "50,257",
+        "strengths": ["Conversational", "Rapid", "Stabil", "Microsoft"],
+        "weaknesses": ["Focus pe dialog", "Mai putin creativ", "Stil conversational"]
     }
 }
 
@@ -182,29 +182,29 @@ elif selected_model_name == "Qwen2-0.5B":
         "Cultural Exchange": "Understanding different cultures helps us",
         "Innovation": "The next breakthrough in renewable energy might be"
     }
-elif selected_model_name == "TinyLlama-1.1B-Chat":
+elif selected_model_name == "DialoGPT-small":
     examples = {
-        "Conversational": "Hello! I'm here to help you with",
-        "Problem Solving": "When faced with a difficult challenge, I would",
-        "Creative Writing": "Once upon a time, in a magical forest, there lived",
-        "Technical Help": "To solve this programming problem, we need to",
-        "Educational": "Let me explain how artificial intelligence works:",
-        "Storytelling": "The brave knight embarked on a quest to",
-        "Advice": "The most important thing to remember is",
-        "Innovation": "The future of technology will bring us"
+        "Conversational": "Hello! How are you doing today?",
+        "Question": "What do you think about artificial intelligence?",
+        "Advice": "I need some advice about learning programming.",
+        "Discussion": "Let's talk about the future of technology.",
+        "Help": "Can you help me understand machine learning?",
+        "Opinion": "What's your opinion on social media?",
+        "Chat": "Hi there! What's on your mind?",
+        "Support": "I'm feeling stressed about work. Any suggestions?"
     }
 
 # Model-specific information
 model_info_colors = {
     "GPT-2": "info-box",
     "Qwen2-0.5B": "success-box", 
-    "TinyLlama-1.1B-Chat": "warning-box"
+    "DialoGPT-small": "warning-box"
 }
 
 model_tips = {
-    "GPT-2": "💡 **Tip pentru GPT-2**: Foloseste prompt-uri scurte si directe. Modelul poate deveni repetitiv cu texte lungi.",
-    "Qwen2-0.5B": "💡 **Tip pentru Qwen2-0.5B**: Model compact si modern, suporta multiple limbi. Functioneaza bine cu prompt-uri scurte si directe. Ideal pentru deployment-uri cu resurse limitate.",
-    "TinyLlama-1.1B-Chat": "💡 **Tip pentru TinyLlama**: Model optimizat pentru conversatii, din familia Llama. Functioneaza excelent cu prompt-uri conversationale si interactive."
+    "GPT-2": "💡 *Tip pentru GPT-2*: Foloseste prompt-uri scurte si directe. Modelul poate deveni repetitiv cu texte lungi.",
+    "Qwen2-0.5B": "💡 *Tip pentru Qwen2-0.5B*: Model compact si modern, suporta multiple limbi. Functioneaza bine cu prompt-uri scurte si directe. Ideal pentru deployment-uri cu resurse limitate.",
+    "DialoGPT-small": "💡 *Tip pentru DialoGPT-small*: Model optimizat pentru conversatii de la Microsoft. Functioneaza excelent cu prompt-uri in stil dialog si intrebari directe."
 }
 
 st.markdown(f"""
