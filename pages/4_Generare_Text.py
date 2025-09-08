@@ -10,7 +10,11 @@ from collections import Counter
 import plotly.graph_objects as go
 
 # Add the parent directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(_file_))))
+try:
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(_file_))))
+except:
+    # Fallback for deployment environments
+    sys.path.append('..')
 
 from utils.styles import apply_custom_css, create_info_box, create_metric_box
 from utils.models import load_generation_model, generate_text
