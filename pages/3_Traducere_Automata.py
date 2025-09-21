@@ -33,8 +33,8 @@ st.markdown("""
 <div class="info-box">
 <h2 style="color: #1f77b4; margin-bottom: 1rem;">Intelegerea traducerii automate</h2>
 <p style="font-size: 1.1rem; line-height: 1.6;">
-<strong>Traducerea automata neurala</strong> foloseste retele neuronale complexe pentru a traduce text dintr-o limba in alta. 
-Modelele moderne, precum Transformer, folosesc mecanisme de <strong>atentie</strong> pentru a decide care cuvinte 
+<strong>Traducerea automata</strong> foloseste retele neuronale complexe pentru a traduce text dintr-o limba in alta. 
+Arhitecturile moderne, precum Transformer, folosesc mecanismul de <strong>atentie</strong> pentru a decide care cuvinte 
 din limba sursa sunt importante pentru traducerea fiecarui cuvant din limba tinta.
 </p>
 <p style="font-size: 1.1rem; line-height: 1.6;">
@@ -165,7 +165,7 @@ selected_example = st.selectbox(
 )
 
 if selected_example == "Text personalizat":
-    default_text = "Write your English text here..."
+    default_text = "Scrie textul tau in engleza aici..."
 else:
     default_text = examples[selected_example]
 
@@ -182,7 +182,7 @@ with st.expander("Parametri avansati", expanded=False):
     
     with col1:
         max_length = st.slider("Lungimea maxima traducere:", 50, 200, 100)
-        num_layers = st.slider("Layere de analizat:", 1, 6, 6)
+        num_layers = st.slider("Straturi de analizat:", 1, 6, 6)
     
     with col2:
         num_heads = st.slider("Capete de atentie:", 1, 8, 8)
@@ -190,7 +190,7 @@ with st.expander("Parametri avansati", expanded=False):
 
 # Translation button
 if st.button("Tradu si analizeaza", type="primary"):
-    if text_input.strip() and text_input != "Write your English text here...":
+    if text_input.strip() and text_input != "Scrie textul tau in engleza aici...":
         with st.spinner("Se traduce textul si se analizeaza atentia..."):
             
             # Perform translation
@@ -264,19 +264,19 @@ if st.button("Tradu si analizeaza", type="primary"):
                                     continue
                                 
                                 try:
-                                    # Tokenize input
-                                    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=128)
+                                    # Proceseaza intrarea
+                                    intrari = tokenizer(text, return_tensors="pt", truncation=True, max_length=128)
                                     
                                     with torch.no_grad():
-                                        # Get model outputs
-                                        outputs = model.generate(**inputs, max_new_tokens=50, num_return_sequences=1, 
+                                        # Obtine iesirile modelului
+                                        iesiri = model.generate(**intrari, max_new_tokens=50, num_return_sequences=1, 
                                                                 return_dict_in_generate=True, output_scores=True)
                                         
                                         # Get the probability of the first generated token
-                                        if hasattr(outputs, 'scores') and len(outputs.scores) > 0:
+                                        if hasattr(iesiri, 'scores') and len(iesiri.scores) > 0:
                                             # Use softmax of first token scores as proxy for translation quality
-                                            first_token_probs = torch.nn.functional.softmax(outputs.scores[0][0], dim=-1)
-                                            results.append(first_token_probs.numpy())
+                                            probabilitati_primul_token = torch.nn.functional.softmax(iesiri.scores[0][0], dim=-1)
+                                            results.append(probabilitati_primul_token.numpy())
                                         else:
                                             # Fallback: uniform distribution
                                             results.append(np.ones(tokenizer.vocab_size) / tokenizer.vocab_size)
@@ -386,10 +386,10 @@ if st.button("Tradu si analizeaza", type="primary"):
                                 
                                 try:
                                     # Translate text
-                                    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=128)
+                                    intrari = tokenizer(text, return_tensors="pt", truncation=True, max_length=128)
                                     
                                     with torch.no_grad():
-                                        outputs = model.generate(**inputs, max_new_tokens=50, num_return_sequences=1)
+                                        outputs = model.generate(**intrari, max_new_tokens=50, num_return_sequences=1)
                                         translation = tokenizer.decode(outputs[0], skip_special_tokens=True)
                                         
                                         # Simple heuristic for translation quality
@@ -506,18 +506,18 @@ with col1:
     <h3>Beneficiile analizei XAI</h3>
     <h4>Pentru dezvoltatori:</h4>
     <ul>
-    <li><strong>Debugging:</strong> Identificarea unde modelul face alegeri proaste</li>
+    <li><strong>Depanare:</strong> Identificarea unde modelul face alegeri slabe</li>
     <li><strong>Optimizare:</strong> Ajustarea parametrilor pentru rezultate mai bune</li>
-    <li><strong>Validare:</strong> Verificarea ca modelul "gandeste" logic</li>
-    <li><strong>Bias Detection:</strong> Identificarea prejudecatilor in traducere</li>
+    <li><strong>Validare:</strong> Verificarea faptului ca modelul "gandeste" logic</li>
+    <li><strong>Detectarea bias-ului:</strong> Identificarea bias-ului in traducere</li>
     </ul>
     
     <h4>Pentru utilizatori:</h4>
     <ul>
     <li><strong>Transparenta:</strong> Intelegerea procesului de traducere</li>
     <li><strong>Incredere:</strong> Validarea calitatii output-ului</li>
-    <li><strong>Control:</strong> Ajustarea parametrilor pentru stiluri diferite</li>
-    <li><strong>Educatie:</strong> Invatarea despre AI de traducere</li>
+    <li><strong>Control:</strong> Ajustarea parametrilor pentru rezulate diferite</li>
+    <li><strong>Educatie:</strong> Invatarea despre AI in contextul traducerii automate</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -530,8 +530,8 @@ with col2:
     <ul>
     <li><strong>Complexitate:</strong> Multe capete de atentie sunt greu de interpretat</li>
     <li><strong>Indirecta:</strong> Atentia nu inseamna intotdeauna cauzalitate</li>
-    <li><strong>Variabilitate:</strong> Diferite layers pot avea comportamente diferite</li>
-    <li><strong>Context:</strong> Atentia poate fi influentata de factori neevident</li>
+    <li><strong>Variabilitate:</strong> Diferite straturi ale arhitecturilor utilizate pot avea comportamente diferite</li>
+    <li><strong>Context:</strong> Atentia poate fi influentata de factori care nu sunt evidenti</li>
     </ul>
     
     <h4>Bune practici:</h4>
@@ -539,7 +539,6 @@ with col2:
     <li>Analizeaza mai multe layers si capete</li>
     <li>Compara cu rezultate pe texte similare</li>
     <li>Valideaza interpretarile cu experti</li>
-    <li>Foloseste atentia ca ghid, nu ca dovada</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)

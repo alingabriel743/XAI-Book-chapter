@@ -118,7 +118,7 @@ with st.expander("Parametri avansati", expanded=False):
     
     with col2:
         lime_samples = st.slider("Esantioane LIME:", 100, 1000, 200)
-        top_features = st.slider("Top features afisate:", 5, 20, 10)
+        top_features = st.slider("Variabile importante afisate:", 5, 20, 10)
 
 # Analysis button
 if st.button("Analizeaza sentimentul", type="primary"):
@@ -324,61 +324,67 @@ if st.button("Analizeaza sentimentul", type="primary"):
                             text_input, 
                             lime_predict_proba, 
                             num_features=top_features,
-                            num_samples=lime_samples
+                            num_samples=lime_samples,
+                            labels=[predicted_class]  # Specify the predicted class
                         )
                         
-                        col1, col2 = st.columns(2)
+                        # Get LIME features for predicted class
+                        lime_features = lime_exp.as_list(label=predicted_class)
                         
-                        with col1:
-                            st.markdown('<h3 class="subsection-header">Importanta cuvintelor (LIME)</h3>', unsafe_allow_html=True)
+                        if lime_features:
+                            col1, col2 = st.columns(2)
                             
-                            # Get LIME features for predicted class
-                            lime_features = lime_exp.as_list()
-                            lime_df = pd.DataFrame(lime_features, columns=['Cuvant', 'Importanta_LIME'])
-                            lime_df['Abs_Importanta'] = np.abs(lime_df['Importanta_LIME'])
-                            lime_df = lime_df.sort_values('Abs_Importanta', ascending=False)
+                            with col1:
+                                st.markdown('<h3 class="subsection-header">Importanta cuvintelor (LIME)</h3>', unsafe_allow_html=True)
+                                
+                                lime_df = pd.DataFrame(lime_features, columns=['Cuvant', 'Importanta_LIME'])
+                                lime_df['Abs_Importanta'] = np.abs(lime_df['Importanta_LIME'])
+                                lime_df = lime_df.sort_values('Abs_Importanta', ascending=False)
+                                
+                                # Style the dataframe
+                                def color_lime_importance(val):
+                                    if val > 0:
+                                        return f"background-color: rgba(76, 175, 80, {min(abs(val) * 3, 1)})"
+                                    else:
+                                        return f"background-color: rgba(244, 67, 54, {min(abs(val) * 3, 1)})"
+                                
+                                styled_lime_df = lime_df[['Cuvant', 'Importanta_LIME']].style.applymap(
+                                    color_lime_importance, subset=['Importanta_LIME']
+                                ).format({'Importanta_LIME': '{:.4f}'})
+                                
+                                st.dataframe(styled_lime_df, use_container_width=True)
                             
-                            # Style the dataframe
-                            def color_lime_importance(val):
-                                if val > 0:
-                                    return f"background-color: rgba(76, 175, 80, {min(abs(val) * 3, 1)})"
-                                else:
-                                    return f"background-color: rgba(244, 67, 54, {min(abs(val) * 3, 1)})"
-                            
-                            styled_lime_df = lime_df[['Cuvant', 'Importanta_LIME']].style.applymap(
-                                color_lime_importance, subset=['Importanta_LIME']
-                            ).format({'Importanta_LIME': '{:.4f}'})
-                            
-                            st.dataframe(styled_lime_df, use_container_width=True)
-                        
-                        with col2:
-                            st.markdown('<h3 class="subsection-header">Vizualizare LIME</h3>', unsafe_allow_html=True)
-                            
-                            # LIME bar plot
-                            fig, ax = plt.subplots(figsize=(8, 6))
-                            
-                            words, importance = zip(*lime_features)
-                            colors = ['red' if imp < 0 else 'green' for imp in importance]
-                            
-                            bars = ax.barh(range(len(words)), importance, color=colors, alpha=0.7)
-                            ax.set_yticks(range(len(words)))
-                            ax.set_yticklabels(words)
-                            ax.set_xlabel('Importanta LIME')
-                            ax.set_title(f'Contributii LIME pentru "{labels[predicted_class]}"')
-                            ax.axvline(x=0, color='black', linestyle='-', alpha=0.3)
-                            
-                            # Add value labels
-                            for i, bar in enumerate(bars):
-                                width = bar.get_width()
-                                ax.text(width + (0.01 if width > 0 else -0.01), bar.get_y() + bar.get_height()/2,
-                                       f'{width:.3f}', ha='left' if width > 0 else 'right', va='center', fontsize=9)
-                            
-                            plt.tight_layout()
-                            st.pyplot(fig)
-                            plt.close()
+                            with col2:
+                                st.markdown('<h3 class="subsection-header">Vizualizare LIME</h3>', unsafe_allow_html=True)
+                                
+                                # LIME bar plot
+                                fig, ax = plt.subplots(figsize=(8, 6))
+                                
+                                words, importance = zip(*lime_features)
+                                colors = ['red' if x < 0 else 'green' for x in importance]
+                                
+                                y_pos = range(len(words))
+                                bars = ax.barh(y_pos, importance, color=colors, alpha=0.7)
+                                ax.set_yticks(y_pos)
+                                ax.set_yticklabels(words)
+                                ax.set_xlabel('Importanta LIME')
+                                ax.set_title(f'Contributii LIME pentru "{labels[predicted_class]}"')
+                                ax.axvline(x=0, color='black', linestyle='-', alpha=0.3)
+                                
+                                # Add value labels
+                                for i, bar in enumerate(bars):
+                                    width = bar.get_width()
+                                    ax.text(width + (0.01 if width > 0 else -0.01), bar.get_y() + bar.get_height()/2,
+                                           f'{width:.3f}', ha='left' if width > 0 else 'right', va='center', fontsize=9)
+                                
+                                plt.tight_layout()
+                                st.pyplot(fig)
+                                plt.close()
+                        else:
+                            st.warning("Nu s-au putut genera explicatii LIME pentru acest text.")
                         
                         # LIME HTML visualization
-                        st.markdown('<h3 class="subsection-header">Text highlighting (LIME)</h3>', unsafe_allow_html=True)
+                        st.markdown('<h3 class="subsection-header">Text evidentiat (LIME)</h3>', unsafe_allow_html=True)
                         
                         # Display in an expandable section
                         with st.expander("Vezi textul evidentiat", expanded=True):
@@ -430,6 +436,9 @@ if st.button("Analizeaza sentimentul", type="primary"):
                     
                     except Exception as e:
                         st.error(f"Eroare la calcularea LIME: {str(e)}")
+                        st.error(f"Tip eroare: {type(e).__name__}")
+                        import traceback
+                        st.code(traceback.format_exc())
                         st.info("Incearca cu un text mai scurt sau ajusteaza parametrii.")
     
     else:
@@ -446,7 +455,7 @@ with col1:
     <h3>SHAP in analiza sentimentelor</h3>
     <h4>Avantaje:</h4>
     <ul>
-    <li><strong>Rigoare matematica:</strong> Valorile se insumeaza exact la diferenta fata de baseline</li>
+    <li><strong>Rigoare matematica:</strong> Valorile se insumeaza exact la diferenta fata de nivelul de referinta</li>
     <li><strong>Consistenta:</strong> Acelasi cuvant va avea aceeasi importanta in contexte similare</li>
     <li><strong>Explicatii globale:</strong> Poate arata comportamentul modelului pe intreg dataset-ul</li>
     <li><strong>Atribuiri precise:</strong> Fiecare token primeste o valoare exacta</li>
@@ -455,7 +464,7 @@ with col1:
     <ul>
     <li>Calculul poate fi lent pentru texte lungi</li>
     <li>Necesita intelegerea conceptelor matematice</li>
-    <li>Poate fi suprasensibil la preprocessing</li>
+    <li>Poate fi sensibil la metodele de preprocesare</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -466,16 +475,16 @@ with col2:
     <h3>LIME in analiza sentimentelor</h3>
     <h4>Avantaje:</h4>
     <ul>
-    <li><strong>Intuitivitate:</strong> Usor de inteles pentru non-experti</li>
-    <li><strong>Viteza:</strong> Calcul rapid chiar si pentru texte lungi</li>
-    <li><strong>Vizualizari:</strong> Evidentiera textului in culori</li>
+    <li><strong>Intuitiv:</strong> Usor de inteles pentru non-experti</li>
+    <li><strong>Rapid:</strong> Calcul rapid chiar si pentru texte lungi</li>
+    <li><strong>Vizualizari:</strong> Evidentierea textului in culori</li>
     <li><strong>Model-agnostic:</strong> Functioneaza cu orice model</li>
     </ul>
     <h4>Limitari:</h4>
     <ul>
     <li>Doar explicatii locale pentru instante individuale</li>
     <li>Rezultatele pot varia intre rulari</li>
-    <li>Dependenta de strategia de sampling</li>
+    <li>Dependenta de strategia de esantionare</li>
     <li>Aproximari care uneori pot fi inexacte</li>
     </ul>
     </div>

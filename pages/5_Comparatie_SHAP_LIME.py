@@ -65,7 +65,7 @@ comparison_data = {
         'Inalta - rezultate consistente',
         'Medie - necesita intelegere matematica',
         'Limitata pentru texte lungi',
-        'Waterfall, bar plots, heatmaps',
+        'Waterfall charts, bar plots, heatmaps',
         'Inalt - calcule complexe',
         'Necesita background tehnic',
         'Functioneaza mai bine cu access la model'
@@ -299,7 +299,7 @@ scenarios = [
         "color": "success-box"
     },
     {
-        "scenario": "Debugging model complex",
+        "scenario": "Depanare model complex",
         "description": "Modelul are comportamente neasteptate si vrei sa intelegi cauza",
         "recommendation": "Ambele",
         "reason": "SHAP pentru acuratete, LIME pentru explorare rapida a ipotezelor",
@@ -395,56 +395,7 @@ for i, step in enumerate(decision_steps):
         </div>
         """, unsafe_allow_html=True)
 
-# Best practices
-st.markdown('<h2 class="section-header">Best practices pentru implementare</h2>', unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown("""
-    <div class="success-box">
-    <h3>Best practices pentru SHAP</h3>
-    <h4>Recomandari:</h4>
-    <ul>
-    <li><strong>Pre-procesare:</strong> Standardizeaza datele de intrare pentru consistenta</li>
-    <li><strong>Baseline:</strong> Alege un baseline reprezentativ si stabil</li>
-    <li><strong>Sampling:</strong> Foloseste suficiente sample-uri pentru stabilitate</li>
-    <li><strong>Caching:</strong> Salveaza rezultatele pentru analize repetitive</li>
-    <li><strong>Validare:</strong> Verifica ca suma valorilor SHAP = predictia - baseline</li>
-    </ul>
-    
-    <h4>Atentie:</h4>
-    <ul>
-    <li>Nu incerca SHAP pe texte foarte lungi fara optimizari</li>
-    <li>Monitorizeaza memoria pentru modele mari</li>
-    <li>Foloseste aproximari cand este posibil</li>
-    <li>Documenteaza parametrii folositi pentru reproducibilitate</li>
-    </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown("""
-    <div class="warning-box">
-    <h3>Best practices pentru LIME</h3>
-    <h4>Recomandari:</h4>
-    <ul>
-    <li><strong>Num_samples:</strong> Foloseste 1000+ sample-uri pentru stabilitate</li>
-    <li><strong>Distance function:</strong> Alege metrici potrivite pentru textul tau</li>
-    <li><strong>Kernel width:</strong> Ajusteaza pentru controlul localitatii</li>
-    <li><strong>Masking:</strong> Testeaza strategii diferite de mascare</li>
-    <li><strong>Multiple runs:</strong> Ruleaza de mai multe ori si media rezultatele</li>
-    </ul>
-    
-    <h4>Atentie:</h4>
-    <ul>
-    <li>Rezultatele pot varia - ruleaza multiplu pentru incredere</li>
-    <li>Verifica ca perturbatiile sunt realiste</li>
-    <li>Nu generaliza explicatiile locale la global</li>
-    <li>Valideaza ca modelul surrogate este suficient de bun</li>
-    </ul>
-    </div>
-    """, unsafe_allow_html=True)
 
 # Final recommendations
 st.markdown('<h2 class="section-header">Recomandari finale</h2>', unsafe_allow_html=True)
@@ -488,7 +439,7 @@ st.markdown("""
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #666; margin-top: 2rem;">
-<p><strong>Ai masterizat comparatia SHAP vs LIME!</strong></p>
+<p><strong>Ai parcurs cu succes aplicatia de comparatie SHAP vs LIME!</strong></p>
 <p>Acum ai toate cunostintele necesare pentru a implementa XAI in proiectele tale de NLP</p>
 <p><em>Experienta invata - aplica aceste concepte in practica!</em></p>
 </div>

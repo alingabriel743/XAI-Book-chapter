@@ -52,7 +52,7 @@ def load_generation_model(model_name="gpt2"):
                 model = AutoModelForCausalLM.from_pretrained(
                     model_name, 
                     trust_remote_code=True,
-                    torch_dtype=torch.float32,
+                    dtype=torch.float32,
                     low_cpu_mem_usage=True,
                     use_safetensors=True
                 )
@@ -61,7 +61,7 @@ def load_generation_model(model_name="gpt2"):
                 model = AutoModelForCausalLM.from_pretrained(
                     model_name, 
                     trust_remote_code=True,
-                    torch_dtype=torch.float32,
+                    dtype=torch.float32,
                     low_cpu_mem_usage=True,
                     use_safetensors=False
                 )
@@ -69,17 +69,27 @@ def load_generation_model(model_name="gpt2"):
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
         elif "opt" in model_name.lower():
-            # For OPT models (Meta/Facebook)
+            # For OPT models (Meta/Facebook) - Optimized for container
             from transformers import AutoTokenizer, AutoModelForCausalLM
             tokenizer = AutoTokenizer.from_pretrained(model_name)
-            model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float32, low_cpu_mem_usage=True)
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name, 
+                dtype=torch.float32, 
+                low_cpu_mem_usage=True,
+                device_map="cpu",
+                trust_remote_code=False
+            )
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
         else:
             # For all GPT-2 variants (gpt2, gpt2-medium, distilgpt2)
             from transformers import GPT2Tokenizer, GPT2LMHeadModel
             tokenizer = GPT2Tokenizer.from_pretrained(model_name)
-            model = GPT2LMHeadModel.from_pretrained(model_name)
+            model = GPT2LMHeadModel.from_pretrained(
+                model_name,
+                torch_dtype=torch.float32,
+                low_cpu_mem_usage=True
+            )
             tokenizer.pad_token = tokenizer.eos_token
         
         return tokenizer, model
