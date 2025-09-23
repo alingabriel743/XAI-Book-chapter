@@ -422,12 +422,12 @@ if st.button("Tradu si analizeaza", type="primary"):
                     try:
                         # LIME prediction function for translation
                         def lime_translation_predict(texts):
-                            """Prediction function for LIME - returns translation quality scores"""
+                            """Improved prediction function for LIME using multiple quality metrics"""
                             results = []
                             
                             for text in texts:
                                 if not text.strip():
-                                    results.append([0.0, 1.0])  # [poor_translation, good_translation]
+                                    results.append([1.0, 0.0])  # [poor_translation, good_translation]
                                     continue
                                 
                                 try:
@@ -437,20 +437,84 @@ if st.button("Tradu si analizeaza", type="primary"):
                                     with torch.no_grad():
                                         outputs = model.generate(**intrari, max_new_tokens=50, num_return_sequences=1)
                                         translation = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                                    
+                                    # Calculate multiple quality metrics
+                                    quality_scores = []
+                                    
+                                    # 1. Length appropriateness for EN->RO
+                                    input_length = len(text.split())
+                                    output_length = len(translation.split())
+                                    
+                                    if input_length > 0:
+                                        length_ratio = output_length / input_length
+                                        # Romanian tends to be 10-20% longer than English
+                                        optimal_ratio = 1.1
+                                        length_score = 1.0 - min(1.0, abs(length_ratio - optimal_ratio) * 2)
+                                        quality_scores.append(max(0.0, length_score))
+                                    
+                                    # 2. Lexical diversity (avoid repetitive translations)
+                                    if output_length > 0:
+                                        unique_words = len(set(translation.lower().split()))
+                                        diversity = unique_words / output_length
+                                        quality_scores.append(diversity)
+                                    
+                                    # 3. Structural completeness
+                                    has_letters = any(c.isalpha() for c in translation)
+                                    has_reasonable_length = len(translation.strip()) > 2
+                                    completeness = 1.0 if (has_letters and has_reasonable_length) else 0.0
+                                    quality_scores.append(completeness)
+                                    
+                                    # 4. Common word translation accuracy
+                                    translation_patterns = {
+                                        'hello': ['salut', 'bună', 'buna'],
+                                        'good': ['bun', 'buna', 'bine'],
+                                        'time': ['timp', 'ora'],
+                                        'day': ['zi', 'ziua'],
+                                        'year': ['an', 'anul'],
+                                        'people': ['oameni', 'persoane'],
+                                        'work': ['muncă', 'lucru', 'lucrează'],
+                                        'life': ['viață', 'viata'],
+                                        'world': ['lume', 'lumea'],
+                                        'house': ['casă', 'casa'],
+                                        'water': ['apă', 'apa'],
+                                        'food': ['mâncare', 'mancare', 'hrană']
+                                    }
+                                    
+                                    accuracy_score = 0.0
+                                    matches = 0
+                                    source_lower = text.lower()
+                                    target_lower = translation.lower()
+                                    
+                                    for en_word, ro_translations in translation_patterns.items():
+                                        if en_word in source_lower:
+                                            matches += 1
+                                            if any(ro_word in target_lower for ro_word in ro_translations):
+                                                accuracy_score += 1.0
+                                    
+                                    if matches > 0:
+                                        accuracy_score /= matches
+                                        quality_scores.append(accuracy_score)
+                                    
+                                    # 5. Absence of obvious errors (repeated tokens, malformed text)
+                                    words = translation.split()
+                                    if len(words) > 1:
+                                        # Check for excessive repetition
+                                        word_counts = {}
+                                        for word in words:
+                                            word_counts[word] = word_counts.get(word, 0) + 1
                                         
-                                        # Simple heuristic for translation quality
-                                        # Based on length ratio and token diversity
-                                        input_length = len(text.split())
-                                        output_length = len(translation.split())
-                                        
-                                        # Quality score based on reasonable length ratio
-                                        if input_length > 0:
-                                            length_ratio = output_length / input_length
-                                            quality_score = min(1.0, max(0.0, 1.0 - abs(length_ratio - 0.8)))  # Expect ~80% length ratio
-                                        else:
-                                            quality_score = 0.0
-                                        
-                                        results.append([1.0 - quality_score, quality_score])
+                                        max_repetition = max(word_counts.values()) if word_counts else 1
+                                        repetition_penalty = min(1.0, 3.0 / max_repetition)  # Penalize if word appears >3 times
+                                        quality_scores.append(repetition_penalty)
+                                    
+                                    # Combine all scores
+                                    if quality_scores:
+                                        final_quality = np.mean(quality_scores)
+                                    else:
+                                        final_quality = 0.0
+                                    
+                                    # Return probabilities for [poor, good] translation
+                                    results.append([1.0 - final_quality, final_quality])
                                 
                                 except Exception:
                                     results.append([1.0, 0.0])  # Poor translation for errors

@@ -8,6 +8,8 @@ import sys
 import os
 from collections import Counter
 import plotly.graph_objects as go
+import shap
+from lime.lime_text import LimeTextExplainer
 
 # Add the parent directory to the Python path
 try:
@@ -134,7 +136,7 @@ examples = {
     "Mediu - Clima": "Climate change requires immediate action because",
     "Arta - Creativitate": "Creative writing helps people express",
     "Poveste - Aventura": "Once upon a time, in a distant galaxy, there was a brave explorer who",
-    "Filosofico": "The meaning of life can be understood through",
+    "Filosofic": "The meaning of life can be understood through",
     "Sport - Motivatie": "Athletes achieve greatness by"
 }
 
@@ -468,6 +470,360 @@ if 'generation_results' in st.session_state and st.session_state['generation_res
                     <p><strong>Local (HuggingFace)</strong></p>
                     </div>
                     """, unsafe_allow_html=True)
+
+                # XAI Analysis for Text Generation
+                st.markdown('<h2 class="section-header">Analiza XAI pentru Generarea de Text</h2>', unsafe_allow_html=True)
+                
+                # SHAP Analysis
+                st.markdown('<h3 class="subsection-header">Analiza SHAP</h3>', unsafe_allow_html=True)
+                
+                with st.spinner("Se calculeaza valorile SHAP pentru generarea de text..."):
+                    try:
+                        # Create SHAP explainer for text generation
+                        def generation_predict_shap(texts):
+                            """Prediction function for SHAP - returns text generation quality scores"""
+                            results = []
+                            
+                            for text in texts:
+                                if not text.strip():
+                                    results.append([0.0])  # Single quality score
+                                    continue
+                                
+                                try:
+                                    # Generate text continuation
+                                    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=128)
+                                    
+                                    with torch.no_grad():
+                                        outputs = model.generate(
+                                            **inputs, 
+                                            max_new_tokens=30,
+                                            temperature=temperature,
+                                            do_sample=True,
+                                            pad_token_id=tokenizer.eos_token_id
+                                        )
+                                        generated = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                                        continuation = generated[len(text):].strip()
+                                    
+                                    # Calculate quality metrics for text generation
+                                    quality_scores = []
+                                    
+                                    # 1. Length appropriateness
+                                    if len(continuation.split()) > 0:
+                                        length_score = min(1.0, len(continuation.split()) / 20)  # Expect ~20 words
+                                        quality_scores.append(length_score)
+                                    
+                                    # 2. Lexical diversity
+                                    words = continuation.split()
+                                    if len(words) > 0:
+                                        unique_words = len(set(words))
+                                        diversity = unique_words / len(words)
+                                        quality_scores.append(diversity)
+                                    
+                                    # 3. Coherence (basic heuristic)
+                                    # Check for reasonable sentence structure
+                                    has_proper_structure = any(c.isalpha() for c in continuation)
+                                    ends_properly = continuation.endswith(('.', '!', '?', ',')) or len(continuation) > 10
+                                    coherence_score = 1.0 if (has_proper_structure and ends_properly) else 0.5
+                                    quality_scores.append(coherence_score)
+                                    
+                                    # 4. Contextual relevance (simple word overlap)
+                                    prompt_words = set(text.lower().split())
+                                    generated_words = set(continuation.lower().split())
+                                    
+                                    # Look for thematic consistency
+                                    common_themes = {
+                                        'technology': ['ai', 'artificial', 'intelligence', 'computer', 'digital', 'software'],
+                                        'science': ['research', 'study', 'discovery', 'experiment', 'theory'],
+                                        'education': ['learn', 'student', 'teach', 'school', 'knowledge'],
+                                        'space': ['space', 'planet', 'star', 'galaxy', 'universe', 'astronaut'],
+                                        'environment': ['climate', 'environment', 'nature', 'green', 'sustainable']
+                                    }
+                                    
+                                    relevance_score = 0.0
+                                    for theme, keywords in common_themes.items():
+                                        prompt_theme_count = sum(1 for word in prompt_words if word in keywords)
+                                        generated_theme_count = sum(1 for word in generated_words if word in keywords)
+                                        
+                                        if prompt_theme_count > 0 and generated_theme_count > 0:
+                                            relevance_score = max(relevance_score, 0.8)
+                                        elif prompt_theme_count > 0:
+                                            relevance_score = max(relevance_score, 0.3)
+                                    
+                                    quality_scores.append(relevance_score)
+                                    
+                                    # 5. Fluency (absence of repetition)
+                                    if len(words) > 1:
+                                        word_counts = {}
+                                        for word in words:
+                                            word_counts[word] = word_counts.get(word, 0) + 1
+                                        
+                                        max_repetition = max(word_counts.values()) if word_counts else 1
+                                        fluency_score = min(1.0, 2.0 / max_repetition)  # Penalize excessive repetition
+                                        quality_scores.append(fluency_score)
+                                    
+                                    # Combine all scores
+                                    if quality_scores:
+                                        final_quality = np.mean(quality_scores)
+                                    else:
+                                        final_quality = 0.0
+                                    
+                                    results.append([final_quality])
+                                
+                                except Exception as e:
+                                    # Fallback for any errors
+                                    results.append([0.0])
+                            
+                            return np.array(results)
+                        
+                        # Create SHAP explainer
+                        explainer = shap.Explainer(generation_predict_shap, tokenizer)
+                        shap_values = explainer([prompt])
+                        
+                        col1, col2 = st.columns([2, 1])
+                        
+                        with col1:
+                            st.markdown('<h4>Contributiile SHAP pentru generarea de text</h4>', unsafe_allow_html=True)
+                            
+                            # Get the tokens and their SHAP values
+                            tokens = shap_values[0].data
+                            # Get contributions (single dimension since we return single quality score)
+                            token_contributions = shap_values[0].values.flatten()
+                            
+                            # Create dataframe
+                            shap_df = pd.DataFrame({
+                                'Token': tokens,
+                                'Contributie_SHAP': token_contributions,
+                                'Abs_Contributie': np.abs(token_contributions)
+                            }).sort_values('Abs_Contributie', ascending=False)
+                            
+                            # Display results
+                            top_shap = shap_df.head(10)
+                            
+                            # Color coding function
+                            def color_shap_contrib(val):
+                                if val > 0:
+                                    return f"background-color: rgba(76, 175, 80, {min(abs(val) * 100, 1)})"
+                                else:
+                                    return f"background-color: rgba(244, 67, 54, {min(abs(val) * 100, 1)})"
+                            
+                            styled_shap = top_shap[['Token', 'Contributie_SHAP']].style.applymap(
+                                color_shap_contrib, subset=['Contributie_SHAP']
+                            ).format({'Contributie_SHAP': '{:.6f}'})
+                            
+                            st.dataframe(styled_shap, use_container_width=True)
+                        
+                        with col2:
+                            st.markdown('<h4>Vizualizare SHAP</h4>', unsafe_allow_html=True)
+                            
+                            # Get top positive and negative contributors
+                            top_positive = shap_df[shap_df['Contributie_SHAP'] > 0].head(5)
+                            top_negative = shap_df[shap_df['Contributie_SHAP'] < 0].head(5)
+                            
+                            combined = pd.concat([top_positive, top_negative]).sort_values('Contributie_SHAP')
+                            
+                            if len(combined) > 0:
+                                # Create bar plot
+                                fig, ax = plt.subplots(figsize=(6, 4))
+                                
+                                tokens_plot = combined['Token'].tolist()
+                                values_plot = combined['Contributie_SHAP'].tolist()
+                                colors = ['red' if x < 0 else 'green' for x in values_plot]
+                                
+                                bars = ax.barh(range(len(tokens_plot)), values_plot, color=colors, alpha=0.7)
+                                ax.set_yticks(range(len(tokens_plot)))
+                                ax.set_yticklabels([f'"{token}"' for token in tokens_plot])
+                                ax.set_xlabel('Valoare SHAP')
+                                ax.set_title('Contributii pentru calitatea generarii')
+                                ax.axvline(x=0, color='black', linestyle='-', alpha=0.3)
+                                
+                                # Add value labels
+                                for i, bar in enumerate(bars):
+                                    width = bar.get_width()
+                                    ax.text(width + (0.001 if width > 0 else -0.001), 
+                                           bar.get_y() + bar.get_height()/2,
+                                           f'{width:.3f}', ha='left' if width > 0 else 'right', 
+                                           va='center', fontsize=8)
+                                
+                                plt.tight_layout()
+                                st.pyplot(fig)
+                                plt.close()
+                    
+                    except Exception as e:
+                        st.error(f"Eroare la calcularea SHAP pentru generarea de text: {str(e)}")
+                        st.info("SHAP pentru generarea de text poate fi computational intensiv. Incearca cu un prompt mai scurt.")
+                
+                # LIME Analysis for Text Generation
+                st.markdown('<h3 class="subsection-header">Analiza LIME</h3>', unsafe_allow_html=True)
+                
+                with st.spinner("Se calculeaza valorile LIME pentru generarea de text..."):
+                    try:
+                        # LIME prediction function for text generation
+                        def generation_predict_lime(texts):
+                            """Prediction function for LIME - returns text generation quality scores"""
+                            results = []
+                            
+                            for text in texts:
+                                if not text.strip():
+                                    results.append([1.0, 0.0])  # [poor_generation, good_generation]
+                                    continue
+                                
+                                try:
+                                    # Generate text continuation
+                                    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=128)
+                                    
+                                    with torch.no_grad():
+                                        outputs = model.generate(
+                                            **inputs, 
+                                            max_new_tokens=30,
+                                            temperature=temperature,
+                                            do_sample=True,
+                                            pad_token_id=tokenizer.eos_token_id
+                                        )
+                                        generated = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                                        continuation = generated[len(text):].strip()
+                                    
+                                    # Calculate quality metrics for text generation
+                                    quality_scores = []
+                                    
+                                    # 1. Length quality (should generate reasonable amount)
+                                    words_generated = len(continuation.split())
+                                    if words_generated >= 5:
+                                        length_quality = min(1.0, words_generated / 15)
+                                        quality_scores.append(length_quality)
+                                    else:
+                                        quality_scores.append(0.2)  # Poor if too short
+                                    
+                                    # 2. Lexical diversity
+                                    words = continuation.split()
+                                    if len(words) > 0:
+                                        unique_words = len(set(words))
+                                        diversity = unique_words / len(words)
+                                        quality_scores.append(diversity)
+                                    
+                                    # 3. Structural quality
+                                    has_letters = any(c.isalpha() for c in continuation)
+                                    has_spaces = ' ' in continuation
+                                    structural_quality = 1.0 if (has_letters and has_spaces) else 0.0
+                                    quality_scores.append(structural_quality)
+                                    
+                                    # 4. Fluency (avoid excessive repetition)
+                                    if len(words) > 1:
+                                        word_freq = {}
+                                        for word in words:
+                                            word_freq[word] = word_freq.get(word, 0) + 1
+                                        
+                                        max_freq = max(word_freq.values())
+                                        fluency = 1.0 - min(0.8, (max_freq - 1) * 0.3)  # Penalize repetition
+                                        quality_scores.append(fluency)
+                                    
+                                    # 5. Content appropriateness
+                                    # Check if continuation makes sense given the prompt
+                                    prompt_last_words = text.split()[-3:] if len(text.split()) >= 3 else text.split()
+                                    continuation_first_words = continuation.split()[:3] if len(continuation.split()) >= 3 else continuation.split()
+                                    
+                                    # Simple heuristic: good continuation should flow from prompt
+                                    appropriateness = 0.7  # Default score
+                                    
+                                    # Bonus for maintaining sentence structure
+                                    if continuation.strip().endswith(('.', '!', '?')):
+                                        appropriateness += 0.2
+                                    
+                                    quality_scores.append(min(1.0, appropriateness))
+                                    
+                                    # Combine all scores
+                                    if quality_scores:
+                                        final_quality = np.mean(quality_scores)
+                                    else:
+                                        final_quality = 0.0
+                                    
+                                    # Return probabilities for [poor, good] generation
+                                    results.append([1.0 - final_quality, final_quality])
+                                
+                                except Exception:
+                                    results.append([1.0, 0.0])  # Poor generation for errors
+                            
+                            return np.array(results)
+                        
+                        # Create LIME explainer
+                        lime_explainer = LimeTextExplainer(
+                            class_names=['Generare slaba', 'Generare buna']
+                        )
+                        
+                        lime_exp = lime_explainer.explain_instance(
+                            prompt,
+                            generation_predict_lime,
+                            num_features=min(10, len(prompt.split())),
+                            num_samples=100
+                        )
+                        
+                        col1, col2 = st.columns([2, 1])
+                        
+                        with col1:
+                            st.markdown('<h4>Contributiile LIME pentru generarea de text</h4>', unsafe_allow_html=True)
+                            
+                            # Get LIME features
+                            lime_features = lime_exp.as_list()
+                            
+                            if lime_features:
+                                lime_df = pd.DataFrame(lime_features, columns=['Token', 'Contributie_LIME'])
+                                lime_df['Abs_Contributie'] = np.abs(lime_df['Contributie_LIME'])
+                                lime_df = lime_df.sort_values('Abs_Contributie', ascending=False)
+                                
+                                # Style the dataframe
+                                def color_lime_contrib(val):
+                                    if val > 0:
+                                        return f"background-color: rgba(76, 175, 80, {min(abs(val) * 2, 1)})"
+                                    else:
+                                        return f"background-color: rgba(244, 67, 54, {min(abs(val) * 2, 1)})"
+                                
+                                styled_lime_df = lime_df[['Token', 'Contributie_LIME']].style.applymap(
+                                    color_lime_contrib, subset=['Contributie_LIME']
+                                ).format({'Contributie_LIME': '{:.4f}'})
+                                
+                                st.dataframe(styled_lime_df, use_container_width=True)
+                            else:
+                                st.warning("Nu s-au putut extrage caracteristici LIME.")
+                        
+                        with col2:
+                            st.markdown('<h4>Vizualizare LIME</h4>', unsafe_allow_html=True)
+                            
+                            if lime_features:
+                                # LIME bar plot
+                                fig, ax = plt.subplots(figsize=(6, 4))
+                                
+                                words, importance = zip(*lime_features)
+                                colors = ['red' if imp < 0 else 'green' for imp in importance]
+                                
+                                bars = ax.barh(range(len(words)), importance, color=colors, alpha=0.7)
+                                ax.set_yticks(range(len(words)))
+                                ax.set_yticklabels([f'"{word}"' for word in words])
+                                ax.set_xlabel('Contributie LIME')
+                                ax.set_title('Contributii pentru calitatea generarii')
+                                ax.axvline(x=0, color='black', linestyle='-', alpha=0.3)
+                                
+                                # Add value labels
+                                for i, bar in enumerate(bars):
+                                    width = bar.get_width()
+                                    ax.text(width + (0.01 if width > 0 else -0.01), 
+                                           bar.get_y() + bar.get_height()/2,
+                                           f'{width:.3f}', ha='left' if width > 0 else 'right', 
+                                           va='center', fontsize=9)
+                                
+                                plt.tight_layout()
+                                st.pyplot(fig)
+                                plt.close()
+                        
+                        # LIME Text highlighting
+                        st.markdown('<h4>Text evidentiat (LIME)</h4>', unsafe_allow_html=True)
+                        
+                        with st.expander("Vezi explicatia LIME completa", expanded=True):
+                            # Show LIME explanation as HTML
+                            lime_html = lime_exp.as_html()
+                            st.components.v1.html(lime_html, height=300)
+                    
+                    except Exception as e:
+                        st.error(f"Eroare la calcularea LIME pentru generarea de text: {str(e)}")
+                        st.info("LIME pentru generarea de text necesita prompt-uri cu multiple cuvinte.")
 
     # Add a button to clear results and generate new text
     st.markdown("---")
