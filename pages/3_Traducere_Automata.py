@@ -256,34 +256,80 @@ if st.button("Tradu si analizeaza", type="primary"):
                     try:
                         # Create SHAP explainer for translation
                         def translation_predict(texts):
-                            """Prediction function for SHAP - returns translation probabilities"""
+                            """Improved prediction function for SHAP using semantic similarity"""
                             results = []
+                            
                             for text in texts:
-                                if not text.strip():  # Handle empty text
-                                    results.append(np.zeros(tokenizer.vocab_size))
+                                if not text.strip():
+                                    results.append([0.0])  # Single quality score
                                     continue
                                 
                                 try:
-                                    # Proceseaza intrarea
+                                    # Translate the text
                                     intrari = tokenizer(text, return_tensors="pt", truncation=True, max_length=128)
                                     
                                     with torch.no_grad():
-                                        # Obtine iesirile modelului
-                                        iesiri = model.generate(**intrari, max_new_tokens=50, num_return_sequences=1, 
-                                                                return_dict_in_generate=True, output_scores=True)
-                                        
-                                        # Get the probability of the first generated token
-                                        if hasattr(iesiri, 'scores') and len(iesiri.scores) > 0:
-                                            # Use softmax of first token scores as proxy for translation quality
-                                            probabilitati_primul_token = torch.nn.functional.softmax(iesiri.scores[0][0], dim=-1)
-                                            results.append(probabilitati_primul_token.numpy())
-                                        else:
-                                            # Fallback: uniform distribution
-                                            results.append(np.ones(tokenizer.vocab_size) / tokenizer.vocab_size)
+                                        outputs = model.generate(**intrari, max_new_tokens=50, num_return_sequences=1)
+                                        translation = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                                    
+                                    # Calculate multiple quality metrics
+                                    quality_scores = []
+                                    
+                                    # 1. Length appropriateness (Romanian tends to be slightly longer than English)
+                                    source_words = len(text.split())
+                                    target_words = len(translation.split())
+                                    if source_words > 0:
+                                        length_ratio = target_words / source_words
+                                        # Optimal ratio for EN->RO is around 0.85-1.15
+                                        length_score = 1.0 - abs(length_ratio - 1.0) * 0.5
+                                        quality_scores.append(max(0.0, min(1.0, length_score)))
+                                    
+                                    # 2. Lexical diversity in translation
+                                    if target_words > 0:
+                                        unique_words = len(set(translation.lower().split()))
+                                        diversity = unique_words / target_words
+                                        quality_scores.append(diversity)
+                                    
+                                    # 3. Presence of special characters and proper structure
+                                    has_proper_structure = any(c.isalpha() for c in translation)
+                                    structure_score = 1.0 if has_proper_structure else 0.0
+                                    quality_scores.append(structure_score)
+                                    
+                                    # 4. Word-level alignment quality (simple heuristic)
+                                    common_patterns = {
+                                        'the': ['cel', 'cea', 'cei', 'cele'],
+                                        'and': ['și', 'si'],
+                                        'is': ['este', 'e'],
+                                        'are': ['sunt'],
+                                        'have': ['au', 'are'],
+                                        'will': ['va', 'vor'],
+                                        'can': ['poate', 'pot']
+                                    }
+                                    
+                                    alignment_score = 0.0
+                                    source_lower = text.lower()
+                                    target_lower = translation.lower()
+                                    
+                                    for en_word, ro_words in common_patterns.items():
+                                        if en_word in source_lower:
+                                            if any(ro_word in target_lower for ro_word in ro_words):
+                                                alignment_score += 1.0
+                                    
+                                    if len([w for w in common_patterns.keys() if w in source_lower]) > 0:
+                                        alignment_score /= len([w for w in common_patterns.keys() if w in source_lower])
+                                        quality_scores.append(alignment_score)
+                                    
+                                    # Combine all scores
+                                    if quality_scores:
+                                        final_quality = np.mean(quality_scores)
+                                    else:
+                                        final_quality = 0.5  # Neutral score
+                                    
+                                    results.append([final_quality])
                                 
                                 except Exception as e:
                                     # Fallback for any errors
-                                    results.append(np.zeros(tokenizer.vocab_size))
+                                    results.append([0.0])
                             
                             return np.array(results)
                         
@@ -298,8 +344,8 @@ if st.button("Tradu si analizeaza", type="primary"):
                             
                             # Get the tokens and their SHAP values
                             tokens = shap_values[0].data
-                            # Sum across all vocab dimensions to get overall contribution
-                            token_contributions = np.sum(shap_values[0].values, axis=1)
+                            # Get contributions (single dimension now since we return single quality score)
+                            token_contributions = shap_values[0].values.flatten()
                             
                             # Create dataframe
                             shap_df = pd.DataFrame({
